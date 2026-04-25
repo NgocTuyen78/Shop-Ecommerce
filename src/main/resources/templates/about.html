@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giới thiệu - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/about.css}" />
+</head>
+<body>
+    
+    <div th:replace="~{header :: header}"></div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="about-hero">
+                <h1>Về ComputerShop</h1>
+                <p class="lead">Cửa hàng phụ kiện máy tính hàng đầu Việt Nam với hơn 5 năm kinh nghiệm</p>
+            </div>
+
+            <div class="about-content">
+                <div class="about-section">
+                    <h2>Câu chuyện của chúng tôi</h2>
+                    <p>ComputerShop được thành lập vào năm 2019 với mục tiêu mang đến những sản phẩm phụ kiện máy tính chất lượng cao với giá cả phải chăng. Chúng tôi hiểu rằng một setup máy tính hoàn hảo không chỉ cần hiệu năng mạnh mẽ mà còn cần những phụ kiện đẳng cấp.</p>
+                </div>
+
+                <div class="about-section">
+                    <h2>Tầm nhìn và sứ mệnh</h2>
+                    <div class="vision-mission">
+                        <div class="vision">
+                            <h3>🎯 Tầm nhìn</h3>
+                            <p>Trở thành cửa hàng phụ kiện máy tính được tin tưởng nhất tại Việt Nam</p>
+                        </div>
+                        <div class="mission">
+                            <h3>🚀 Sứ mệnh</h3>
+                            <p>Cung cấp sản phẩm chất lượng cao và dịch vụ tận tâm để nâng cao trải nghiệm máy tính của khách hàng</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <h2>Giá trị cốt lõi</h2>
+                    <div class="values-grid">
+                        <div class="value-item">
+                            <div class="value-icon">⭐</div>
+                            <h3>Chất lượng</h3>
+                            <p>Chỉ bán những sản phẩm chính hãng, được kiểm tra kỹ lưỡng</p>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-icon">💰</div>
+                            <h3>Giá cả hợp lý</h3>
+                            <p>Cam kết mang đến giá tốt nhất thị trường</p>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-icon">🤝</div>
+                            <h3>Dịch vụ tận tâm</h3>
+                            <p>Hỗ trợ khách hàng 24/7 với đội ngũ chuyên nghiệp</p>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-icon">🚚</div>
+                            <h3>Giao hàng nhanh</h3>
+                            <p>Giao hàng trong 24h tại TP.HCM và 2-3 ngày toàn quốc</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <h2>Thông tin liên hệ</h2>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <strong>📍 Địa chỉ:</strong>
+                            <p>123 Đường ABC, Quận XYZ, TP.Hồ Chí Minh</p>
+                        </div>
+                        <div class="contact-item">
+                            <strong>📞 Hotline:</strong>
+                            <p>0123-456-789 (24/7)</p>
+                        </div>
+                        <div class="contact-item">
+                            <strong>📧 Email:</strong>
+                            <p>info@jsbcomputershop.com</p>
+                        </div>
+                        <div class="contact-item">
+                            <strong>⏰ Giờ làm việc:</strong>
+                            <p>Thứ 2 - Chủ nhật: 8:00 - 22:00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    
+    <div th:replace="~{footer :: footer}"></div>
+
+    <script th:src="@{/JavaScript/header.js}"></script>
+    <script th:src="@{/JavaScript/main.js}"></script>
+</body>
+</html>

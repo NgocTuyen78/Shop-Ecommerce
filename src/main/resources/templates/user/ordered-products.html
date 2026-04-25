@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Purchased Products - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      .ordered-products-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      .page-header {
+        margin-bottom: 2rem;
+      }
+      .page-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .page-header p {
+        color: #666;
+      }
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .stat-card i {
+        font-size: 2rem;
+        color: #007bff;
+        margin-bottom: 0.5rem;
+      }
+      .stat-card .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .stat-card .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+      .product-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      .product-card-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: #f8f9fa;
+      }
+      .product-card-body {
+        padding: 1rem;
+      }
+      .product-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .product-card-category {
+        color: #666;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+      }
+      .product-card-price {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #28a745;
+        margin-bottom: 0.75rem;
+      }
+      .product-card-stats {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 0.75rem;
+        border-top: 1px solid #eee;
+        font-size: 0.85rem;
+        color: #666;
+      }
+      .product-card-stats span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .product-card-actions {
+        padding: 0 1rem 1rem;
+      }
+      .product-card-actions .btn {
+        width: 100%;
+        text-align: center;
+      }
+      .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid #007bff;
+        color: #007bff;
+      }
+      .btn-outline:hover {
+        background-color: #007bff;
+        color: white;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+      .empty-state i {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+      }
+      .empty-state h3 {
+        color: #666;
+        margin-bottom: 0.5rem;
+      }
+      .empty-state p {
+        color: #999;
+        margin-bottom: 1.5rem;
+      }
+      .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+      }
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <div class="ordered-products-container">
+      <div class="page-header">
+        <h1><i class="fas fa-box-open"></i> Purchased Products</h1>
+        <p>List of all products you have ordered</p>
+      </div>
+
+      <div th:if="${error}" class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <i class="fas fa-box"></i>
+          <div class="stat-value" th:text="${totalProducts}">0</div>
+          <div class="stat-label">Products Purchased</div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div th:if="${#lists.isEmpty(orderedProducts)}" class="empty-state">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>No products purchased yet</h3>
+        <p>You haven't bought any products yet. Start shopping now!</p>
+        <a href="/products" class="btn btn-primary">View products</a>
+      </div>
+
+      <!-- Products Grid -->
+      <div th:if="${!#lists.isEmpty(orderedProducts)}" class="products-grid">
+        <div th:each="item : ${orderedProducts}" class="product-card">
+          <img
+            th:src="${item[0].image != null ? item[0].image.imageUrl : '/Images/placeholder.svg'}"
+            alt="Product"
+            class="product-card-image"
+            onerror="this.src = '/Images/placeholder.svg'"
+          />
+          <div class="product-card-body">
+            <div class="product-card-title" th:text="${item[0].productName}">Product Name</div>
+            <div class="product-card-category" th:text="${item[0].category?.categoryName ?: 'Uncategorized'}">Category</div>
+            <div
+              class="product-card-price"
+              th:text="${#numbers.formatDecimal(item[0].price, 0, 'COMMA', 0, 'POINT') + ' VND'}"
+            >
+              0 VND
+            </div>
+            <div class="product-card-stats">
+              <span>
+                <i class="fas fa-shopping-cart"></i>
+                <span th:text="'Purchased: ' + ${item[1]}">Purchased: 0</span>
+              </span>
+              <span>
+                <i class="fas fa-clock"></i>
+                <span
+                  th:text="'Latest: ' + ${#temporals.format(item[2], 'dd/MM/yyyy')}"
+                >Latest: --</span
+                >
+              </span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <a
+              th:href="@{/product/{id}(id=${item[0].productId})}"
+              class="btn btn-outline"
+            >
+              <i class="fas fa-eye"></i> View details
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="~{footer :: footer}"></div>
+    <script th:src="@{/JavaScript/header.js}"></script>
+  </body>
+</html>

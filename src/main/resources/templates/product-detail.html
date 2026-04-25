@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${product.productName} + ' - ComputerShop'">
+      Product Details
+    </title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <style>
+      .product-detail-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .breadcrumb {
+        margin-bottom: 30px;
+        font-size: 0.9rem;
+      }
+
+      .breadcrumb a {
+        color: var(--color-link);
+        text-decoration: none;
+        margin-right: 8px;
+      }
+
+      .breadcrumb a:hover {
+        text-decoration: underline;
+        color: var(--color-link-hover);
+      }
+
+      .breadcrumb span {
+        margin: 0 8px;
+        color: var(--color-text-subtle);
+      }
+
+      .product-detail-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        background: var(--card-bg);
+        border: 1px solid var(--color-border);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: var(--box-shadow);
+      }
+
+      .product-image-section {
+        text-align: center;
+      }
+
+      .product-main-image {
+        width: 100%;
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid var(--color-divider);
+        padding: 20px;
+        background: var(--color-surface-raised);
+      }
+
+      .product-info-section h1 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: var(--color-text);
+      }
+
+      .product-category {
+        display: inline-block;
+        background: var(--gradient-primary);
+        color: var(--color-text-inverse);
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        font-weight: 500;
+      }
+
+      .product-price-section {
+        background: var(--gradient-accent);
+        color: var(--color-text-inverse);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        box-shadow: var(--shadow-md);
+      }
+
+      .product-price-section .price-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+      }
+
+      .product-price-section .price {
+        font-size: 2.5rem;
+        font-weight: 700;
+        font-family: "Courier New", monospace;
+      }
+
+      .product-stock-info {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-weight: 500;
+      }
+
+      .stock-available {
+        background: var(--color-success-muted);
+        color: var(--color-success);
+        border: 1px solid var(--color-success);
+      }
+
+      .stock-low {
+        background: var(--color-warning-muted);
+        color: var(--color-warning);
+        border: 1px solid var(--color-warning);
+      }
+
+      .stock-out {
+        background: var(--color-danger-muted);
+        color: var(--color-danger);
+        border: 1px solid var(--color-danger);
+      }
+
+      .product-description {
+        margin: 20px 0;
+        line-height: 1.6;
+      }
+
+      .product-description h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        color: var(--color-text);
+      }
+
+      .product-description p {
+        color: var(--color-text-muted);
+        margin-bottom: 10px;
+      }
+
+      .product-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+      }
+
+      .btn {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .btn.btn-primary {
+        flex: 1;
+      }
+
+      .btn-secondary {
+        background: var(--main-background);
+        color: var(--color-text-inverse);
+        flex: 1;
+      }
+
+      .btn-secondary:hover {
+        background: var(--color-surface-card);
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin: 20px 0;
+      }
+
+      .quantity-selector label {
+        font-weight: 500;
+        color: var(--color-text);
+      }
+
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .quantity-btn {
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-raised);
+        color: var(--color-text);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.2s ease;
+      }
+
+      .quantity-btn:hover {
+        background: var(--color-surface-card);
+        border-color: var(--brand);
+      }
+
+      .quantity-input {
+        width: 70px;
+        text-align: center;
+        padding: 8px;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 500;
+        background: var(--color-surface-raised);
+        color: var(--color-text);
+      }
+
+      .product-meta {
+        margin: 30px 0;
+        padding: 20px;
+        background: var(--color-surface-raised);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+      }
+
+      .product-meta-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--color-divider);
+      }
+
+      .product-meta-item:last-child {
+        border-bottom: none;
+      }
+
+      .product-meta-label {
+        font-weight: 500;
+        color: var(--color-text-muted);
+      }
+
+      .product-meta-value {
+        color: var(--color-text);
+        font-weight: 600;
+      }
+
+      @media (max-width: 768px) {
+        .product-detail-content {
+          grid-template-columns: 1fr;
+          gap: 30px;
+          padding: 20px;
+        }
+
+        .product-info-section h1 {
+          font-size: 1.5rem;
+        }
+
+        .product-price-section .price {
+          font-size: 2rem;
+        }
+
+        .product-actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <main class="product-detail-container">
+      <div class="breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <a href="/products">Products</a>
+        <span>›</span>
+        <span th:text="${product.productName}">Product Name</span>
+      </div>
+
+      <div class="product-detail-content">
+        <div class="product-image-section">
+          <img
+            class="product-main-image"
+            th:src="${product.image != null ? product.image.imageUrl : '/Images/placeholder.svg'}"
+            th:alt="${product.productName}"
+            onerror="this.src = '/Images/placeholder.svg'"
+          />
+        </div>
+
+        <div class="product-info-section">
+          <h1 th:text="${product.productName}">Product Name</h1>
+
+          <div class="product-category" th:if="${product.category != null}">
+            <span th:text="${product.category.categoryName}">Category</span>
+          </div>
+
+          <div class="product-price-section">
+            <div class="price-label">Price</div>
+            <div
+              class="price"
+              th:text="${#numbers.formatDecimal(product.price,1,'COMMA',0,'POINT')} + ' ₫'"
+            >
+              0 ₫
+            </div>
+          </div>
+
+          <div
+            class="product-stock-info"
+            th:classappend="${product.stockQuantity > 5 ? 'stock-available' : (product.stockQuantity > 0 ? 'stock-low' : 'stock-out')}"
+          >
+            <span th:if="${product.stockQuantity > 5}">
+              ✓ In Stock - Ready to ship
+            </span>
+            <span
+              th:if="${product.stockQuantity <= 5 and product.stockQuantity > 0}"
+            >
+              ⚠ Only
+              <strong th:text="${product.stockQuantity}">0</strong> items left
+            </span>
+            <span th:if="${product.stockQuantity == 0}"> ✗ Out of Stock </span>
+          </div>
+
+          <div class="quantity-selector" th:if="${product.stockQuantity > 0}">
+            <label>Quantity:</label>
+            <div class="quantity-controls">
+              <button class="quantity-btn" onclick="decreaseQuantity()">
+                -
+              </button>
+              <input
+                type="number"
+                id="quantity"
+                class="quantity-input"
+                value="1"
+                min="1"
+                th:max="${product.stockQuantity}"
+              />
+              <button
+                class="quantity-btn"
+                onclick="increaseQuantity()"
+                th:attr="data-max=${product.stockQuantity}"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div class="product-description">
+            <h3>Product Description</h3>
+            <p
+              th:text="${product.description != null and !#strings.isEmpty(product.description) ? product.description : 'No detailed description available for this product.'}"
+            >
+              Product description
+            </p>
+          </div>
+
+          <div class="product-meta">
+            <div class="product-meta-item">
+              <span class="product-meta-label">Product ID:</span>
+              <span
+                class="product-meta-value"
+                th:text="'SP' + ${product.productId}"
+                >SP001</span
+              >
+            </div>
+            <div class="product-meta-item" th:if="${product.category != null}">
+              <span class="product-meta-label">Category:</span>
+              <span
+                class="product-meta-value"
+                th:text="${product.category.categoryName}"
+                >Category</span
+              >
+            </div>
+            <div class="product-meta-item">
+              <span class="product-meta-label">Status:</span>
+              <span
+                class="product-meta-value"
+                th:text="${product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}"
+                >Status</span
+              >
+            </div>
+          </div>
+
+          <div class="product-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              th:attr="data-id=${product.productId}"
+              th:disabled="${product.stockQuantity == 0 || session.role == 'admin'}"
+              th:if="${session.role != 'admin'}"
+              onclick="addToCart(this)"
+            >
+              <span th:if="${product.stockQuantity > 0}"
+                >Add to Cart</span
+              >
+              <span th:if="${product.stockQuantity == 0}">Out of Stock</span>
+            </button>
+            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="~{footer :: footer}"></div>
+
+    <script th:src="@{/JavaScript/main.js}"></script>
+    <script>
+      function increaseQuantity() {
+        const input = document.getElementById("quantity");
+        const max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+          input.value = parseInt(input.value) + 1;
+        }
+      }
+
+      function decreaseQuantity() {
+        const input = document.getElementById("quantity");
+        if (parseInt(input.value) > 1) {
+          input.value = parseInt(input.value) - 1;
+        }
+      }
+
+      function addToCart(button) {
+        const productId = button.getAttribute("data-id");
+        const quantity = document.getElementById("quantity")
+          ? parseInt(document.getElementById("quantity").value)
+          : 1;
+
+        button.disabled = true;
+        const originalText = button.innerHTML;
+        button.innerHTML = "Adding...";
+
+        fetch("/cart/add-ajax", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `productId=${productId}&quantity=${quantity}`,
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.success) {
+              if (typeof window.showToast === "function")
+                window.showToast(
+                  data.message || "Product added to cart!",
+                  "success",
+                );
+              if (typeof window.updateCartCount === "function")
+                window.updateCartCount();
+              button.innerHTML = "✓ Added";
+              button.classList.add("btn-success");
+              setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                button.classList.remove("btn-success");
+              }, 2000);
+            } else {
+              if (typeof window.showToast === "function")
+                window.showToast(
+                  data.message || "Error adding to cart",
+                  "error",
+                );
+              button.innerHTML = originalText;
+              button.disabled = false;
+            }
+          })
+          .catch(() => {
+            if (typeof window.showToast === "function")
+              window.showToast(
+                "An error occurred. Please login and try again.",
+                "error",
+              );
+            button.innerHTML = originalText;
+            button.disabled = false;
+          });
+      }
+    </script>
+
+    <script th:src="@{/JavaScript/header.js}"></script>
+    <script th:src="@{/JavaScript/main.js}"></script>
+  </body>
+</html>

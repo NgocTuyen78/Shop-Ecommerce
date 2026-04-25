@@ -1,0 +1,88 @@
+version: '3.8'
+
+# Docker Compose for Distributed Database Mode (2 Databases)
+# Usage: docker-compose -f docker-compose.distributed.yml up --build
+#
+# Database Distribution by Module:
+# - DB1 (computershop_main): Users, Products, Categories, Images, Roles
+# - DB2 (computershop_orders): Orders, OrderDetails, Carts, CartItems, Payments
+
+services:
+  # Spring Boot Application
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: computershop-app-distributed
+    ports:
+      - "2345:2345"
+    environment:
+      - SPRING_PROFILES_ACTIVE=distributed
+      # Primary Database (Users, Products, Categories)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-main:5432/computershop_main
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      # Orders Database (Orders, Carts)
+      - SPRING_DATASOURCE_ORDERS_URL=jdbc:postgresql://postgres-orders:5432/computershop_orders
+      - SPRING_DATASOURCE_ORDERS_USERNAME=postgres
+      - SPRING_DATASOURCE_ORDERS_PASSWORD=postgres
+    depends_on:
+      postgres-main:
+        condition: service_healthy
+      postgres-orders:
+        condition: service_healthy
+    networks:
+      - computershop-network
+    restart: on-failure
+
+  # PostgreSQL - Main Database (Products, Users, Categories)
+  postgres-main:
+    image: postgres:16-alpine
+    container_name: computershop-db-main
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=computershop_main
+      - POSTGRES_USER=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-main-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - computershop-network
+
+  # PostgreSQL - Orders Database (Orders, Carts)
+  postgres-orders:
+    image: postgres:16-alpine
+    container_name: computershop-db-orders
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=computershop_orders
+      - POSTGRES_USER=postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-orders-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - computershop-network
+
+# Networks
+networks:
+  computershop-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  postgres-main-data:
+  postgres-orders-data:

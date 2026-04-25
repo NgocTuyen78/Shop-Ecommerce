@@ -1,0 +1,85 @@
+/* Theme control (works with [data-theme="dark"|"light"] on <html>) */
+
+.theme-toggle {
+  flex-shrink: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--border-radius-pill);
+  border: 1px solid var(--theme-toggle-border);
+  background: var(--theme-toggle-bg);
+  color: var(--theme-toggle-icon);
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s ease;
+  box-shadow: var(--theme-toggle-shadow);
+}
+
+.theme-toggle:hover {
+  background: var(--theme-toggle-bg-hover);
+  color: var(--theme-toggle-icon-hover);
+  border-color: var(--theme-toggle-border-hover);
+  box-shadow: var(--theme-toggle-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:focus {
+  outline: none;
+  box-shadow:
+    var(--theme-toggle-shadow),
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--color-focus-ring);
+}
+
+/* Stack icons in one slot so sun + moon never look like two controls */
+.theme-toggle .theme-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+html:not([data-theme="light"]) .theme-toggle .theme-icon-sun {
+  opacity: 1;
+  visibility: visible;
+}
+
+html:not([data-theme="light"]) .theme-toggle .theme-icon-moon {
+  opacity: 0;
+  visibility: hidden;
+}
+
+[data-theme="light"] .theme-toggle .theme-icon-sun {
+  opacity: 0;
+  visibility: hidden;
+}
+
+[data-theme="light"] .theme-toggle .theme-icon-moon {
+  opacity: 1;
+  visibility: visible;
+}
+
+.theme-toggle--admin {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.75rem;
+  z-index: 5;
+}
+
+@media (max-width: 768px) {
+  .theme-toggle--admin {
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+}

@@ -1,0 +1,136 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/cart.css}" />
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <div class="container cart-page">
+      <h1>Your Shopping Cart</h1>
+
+      <div th:if="${#lists.isEmpty(cartItems)}" class="empty-cart">
+        <p>Your cart is empty.</p>
+        <a class="btn" th:href="@{/}">Continue Shopping</a>
+      </div>
+
+      <div th:if="${!#lists.isEmpty(cartItems)}">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Unit Price</th>
+              <th>Quantity</th>
+              <th>Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${cartItems}">
+              <td class="product-col">
+                <img
+                  th:src="${item.product.image != null ? item.product.image.imageUrl : '/Images/placeholder.svg'}"
+                  alt="img"
+                  class="thumb"
+                  onerror="this.src = '/Images/placeholder.svg'"
+                />
+                <div class="product-info">
+                  <div class="name" th:text="${item.product.productName}"></div>
+                </div>
+              </td>
+              <td
+                th:text="${#numbers.formatDecimal(item.product.price,1,'COMMA',0,'POINT')} + ' ₫'"
+              ></td>
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  th:value="${item.quantity}"
+                  class="qty-input"
+                  th:attr="data-cart-item-id=${item.cartItemId}"
+                />
+                <button
+                  class="btn small update-btn"
+                  th:attr="data-cart-item-id=${item.cartItemId}"
+                >
+                  Update
+                </button>
+              </td>
+              <td
+                th:text="${#numbers.formatDecimal(item.subtotal,1,'COMMA',0,'POINT')} + ' ₫'"
+              ></td>
+              <td>
+                <button
+                  class="btn danger remove-btn"
+                  th:attr="data-cart-item-id=${item.cartItemId}"
+                >
+                  Remove
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Total:</span>
+            <span
+              class="total"
+              th:text="${#numbers.formatDecimal(cartTotal,1,'COMMA',2,'POINT')}"
+            ></span>
+          </div>
+          <div class="actions">
+            <a class="btn" th:href="@{/}">Continue Shopping</a>
+            <a class="btn primary" th:href="@{/cart/checkout}">Checkout</a>
+            <form
+              th:action="@{/cart/clear}"
+              method="post"
+              style="display: inline"
+            >
+              <button class="btn" type="submit">Clear Cart</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="~{footer :: footer}"></div>
+
+    <script th:src="@{/JavaScript/header.js}"></script>
+    <script th:src="@{/JavaScript/main.js}"></script>
+    <script>
+      // Simple AJAX handlers for update/remove
+      document.addEventListener("click", function (e) {
+        if (e.target.matches(".update-btn")) {
+          const id = e.target.getAttribute("data-cart-item-id");
+          const input = document.querySelector(
+            '.qty-input[data-cart-item-id="' + id + '"]',
+          );
+          const qty = parseInt(input.value || "0");
+          fetch("/cart/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ cartItemId: id, quantity: qty }),
+          }).then(() => location.reload());
+        }
+
+        if (e.target.matches(".remove-btn")) {
+          const id = e.target.getAttribute("data-cart-item-id");
+          fetch("/cart/remove", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ cartItemId: id }),
+          }).then(() => location.reload());
+        }
+      });
+    </script>
+  </body>
+</html>

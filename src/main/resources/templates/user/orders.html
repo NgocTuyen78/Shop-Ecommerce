@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Orders - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      .orders-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      .orders-header {
+        margin-bottom: 2rem;
+      }
+      .orders-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+      }
+      .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .order-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .order-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+      }
+      .order-id {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .order-date {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      .order-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .status-pending_payment {
+        background-color: #fce7f3;
+        color: #9d174d;
+      }
+      .status-confirmed {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      .status-shipping {
+        background-color: #cce5ff;
+        color: #004085;
+      }
+      .status-completed {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .order-summary {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .order-items {
+        color: #666;
+      }
+      .order-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #28a745;
+      }
+      .order-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.9rem;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+      .empty-state i {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+      }
+      .empty-state h3 {
+        color: #666;
+        margin-bottom: 0.5rem;
+      }
+      .empty-state p {
+        color: #999;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .orders-container {
+          margin: 1rem auto;
+          padding: 0 0.75rem;
+        }
+
+        .orders-header h1 {
+          font-size: 1.5rem;
+        }
+
+        .order-card {
+          padding: 1rem;
+        }
+
+        .order-card-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+
+        .order-id {
+          font-size: 1rem;
+        }
+
+        .order-summary {
+          grid-template-columns: 1fr;
+        }
+
+        .order-actions {
+          flex-direction: column;
+        }
+
+        .order-actions .btn {
+          width: 100%;
+          text-align: center;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .orders-container {
+          padding: 0 0.5rem;
+        }
+
+        .orders-header h1 {
+          font-size: 1.25rem;
+        }
+
+        .order-card {
+          padding: 0.75rem;
+        }
+
+        .order-status {
+          font-size: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <div class="orders-container">
+      <div class="orders-header">
+        <h1><i class="fas fa-shopping-bag"></i> My Orders</h1>
+        <p>View all orders you have placed</p>
+      </div>
+
+      <div th:if="${success}" class="alert alert-success">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+      </div>
+      <div th:if="${error}" class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+      </div>
+
+      <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>No orders yet</h3>
+        <p>You have no orders yet. Start shopping now!</p>
+        <a href="/products" class="btn btn-primary" style="margin-top: 1rem"
+          >View products</a
+        >
+      </div>
+
+      <div th:if="${!#lists.isEmpty(orders)}" class="orders-list">
+        <div th:each="order : ${orders}" class="order-card">
+          <div class="order-card-header">
+            <div>
+              <div class="order-id">
+                Order #<span th:text="${order.orderId}"></span>
+              </div>
+              <div class="order-date" th:if="${order.orderDate != null}">
+                <i class="fas fa-calendar"></i>
+                <span
+                  th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+                ></span>
+              </div>
+              <div class="order-date" th:if="${order.orderDate == null}">
+                <i class="fas fa-calendar"></i> Order Date: Not updated
+              </div>
+            </div>
+            <div>
+              <span
+                class="order-status"
+                th:classappend="${order.status == 'pending'} ? 'status-pending' : (${order.status == 'pending_payment'} ? 'status-pending_payment' : (${order.status == 'confirmed'} ? 'status-confirmed' : (${order.status == 'shipping'} ? 'status-shipping' : (${order.status == 'completed'} ? 'status-completed' : 'status-cancelled'))))"
+                th:text="${order.status == 'pending'} ? 'Processing' : (${order.status == 'pending_payment'} ? 'Pending Payment' : (${order.status == 'confirmed'} ? 'Confirmed' : (${order.status == 'shipping'} ? 'Shipping' : (${order.status == 'completed'} ? 'Completed' : (${order.status == 'cancelled'} ? 'Cancelled' : order.status)))))"
+              >
+              </span>
+            </div>
+          </div>
+
+          <div class="order-summary">
+            <div class="order-items">
+              <i class="fas fa-box"></i>
+              <span
+                th:text="${order.orderDetails != null ? #lists.size(order.orderDetails) : 0}"
+              ></span>
+              products
+            </div>
+            <div class="order-total">
+              <span
+                th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}"
+              ></span>
+              VND
+            </div>
+          </div>
+
+          <div class="order-actions">
+            <a
+              th:href="@{/user/orders/{id}(id=${order.orderId})}"
+              class="btn btn-primary"
+            >
+              <i class="fas fa-eye"></i> View details
+            </a>
+            <a
+              th:if="${order.status == 'pending_payment'}"
+              th:href="@{/cart/payment/{id}(id=${order.orderId})}"
+              class="btn"
+              style="background: #ae2070; color: white"
+            >
+              <i class="fas fa-qrcode"></i> Pay Now
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="~{footer :: footer}"></div>
+    <script th:src="@{/JavaScript/header.js}"></script>
+  </body>
+</html>

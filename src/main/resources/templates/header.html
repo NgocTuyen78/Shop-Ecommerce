@@ -1,0 +1,81 @@
+
+<header class="header" th:fragment="header">
+    <div class="container">
+        <div class="header-grid">
+            <div class="header-cell header-cell-brand">
+                <div class="brand">
+                    <span class="brand-sparkle" aria-hidden="true">✨</span>
+                    <img src="/Images/logo.png" alt="logo" onerror="this.style.display='none'" />
+                    <a href="/" class="brand-name">ComputerShop</a>
+                    <span class="brand-sparkle" aria-hidden="true">✨</span>
+                </div>
+            </div>
+
+            <form id="search-form" class="header-cell header-cell-search search" th:action="@{/search}" method="get">
+                <input id="q" type="search" name="q" placeholder="Search products..." />
+                <!-- <button class="btn btn-search btn-primary" type="submit">
+                    <span>Search</span>
+                </button> -->
+            </form>
+
+            <nav class="header-cell header-cell-nav nav">
+                <div th:if="${session.userId == null}" class="nav-guest">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/products" class="nav-link">Products</a>
+                    <a href="/about" class="nav-link">About</a>
+                    <a href="/login" class="nav-link btn btn-primary">Login</a>
+                    <a href="/register" class="nav-link">Register</a>
+                </div>
+
+                <div th:if="${session.userId != null && session.role != 'admin'}" class="nav-user">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/products" class="nav-link">Products</a>
+                    <a href="/about" class="nav-link">About</a>
+                    <a href="/cart/view" class="nav-link cart-link">
+                        <span>Cart</span>
+                        <span class="cart-count"
+                              th:text="${session.cartCount ?: 0}"
+                              th:classappend="${(session.cartCount ?: 0) == 0} ? ' is-empty' : ''">0</span>
+                    </a>
+
+                    <div class="user-menu">
+                        <button type="button" class="user-menu-btn" onclick="toggleUserMenu()">
+                            <span th:text="${session.username}">User</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="user-menu-dropdown" id="userMenuDropdown">
+                            <a href="/user/profile" class="dropdown-item">Profile</a>
+                            <a href="/user/orders" class="dropdown-item">Orders</a>
+                            <a href="/user/ordered-products" class="dropdown-item">Purchased Products</a>
+                            <hr class="dropdown-divider">
+                            <a href="/logout" class="dropdown-item">Logout</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${session.userId != null && session.role == 'admin'}" class="nav-admin">
+                    <a href="/admin/products" class="nav-link">Products</a>
+                    <a href="/admin/users" class="nav-link">Users</a>
+                    <a href="/admin/orders" class="nav-link">Orders</a>
+
+                    <div class="user-menu">
+                        <button type="button" class="user-menu-btn" onclick="toggleUserMenu()">
+                            <span th:text="${session.username}">Admin</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="user-menu-dropdown" id="userMenuDropdown">
+                            <a href="/user/profile" class="dropdown-item">Profile</a>
+                            <a href="/admin/dashboard" class="dropdown-item">Dashboard</a>
+                            <hr class="dropdown-divider">
+                            <a href="/logout" class="dropdown-item">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="header-cell header-cell-theme" aria-hidden="false">
+                <th:block th:replace="~{fragments/theme-toggle :: button}"></th:block>
+            </div>
+        </div>
+    </div>
+</header>

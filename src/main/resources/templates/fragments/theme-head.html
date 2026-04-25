@@ -1,0 +1,11 @@
+<script th:fragment="earlyInit" xmlns:th="http://www.thymeleaf.org">
+(function () {
+  try {
+    var k = "shop-theme";
+    var t = localStorage.getItem(k);
+    document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }
+})();
+</script>

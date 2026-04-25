@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>System Error - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <style>
+      .error-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 40px;
+        text-align: center;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .error-code {
+        font-size: 72px;
+        font-weight: bold;
+        color: #e74c3c;
+        margin: 0;
+      }
+      .error-title {
+        font-size: 24px;
+        color: #333;
+        margin: 20px 0;
+      }
+      .error-message {
+        color: #666;
+        margin-bottom: 30px;
+      }
+      .btn-home {
+        display: inline-block;
+        padding: 12px 30px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background 0.3s;
+      }
+      .btn-home:hover {
+        background: #2980b9;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <main class="container">
+      <div class="error-container">
+        <h1 class="error-code">500</h1>
+        <h2 class="error-title">System Error</h2>
+        <p
+          class="error-message"
+          th:text="${errorMessage} ?: 'An error occurred while processing your request. Please try again later.'"
+        ></p>
+        <a href="/" class="btn-home">Back to Home</a>
+      </div>
+    </main>
+
+    <div th:replace="~{footer :: footer}"></div>
+  </body>
+</html>

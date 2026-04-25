@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Orders - Computer Shop Admin</title>
+    <link rel="stylesheet" th:href="@{/CSS/admin.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/admin-order.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="admin-container">
+      <nav class="admin-sidebar" id="adminSidebar">
+        <div class="admin-logo">
+          <h2><i class="fas fa-laptop"></i> Admin Panel</h2>
+        </div>
+        <ul class="admin-nav">
+          <li>
+            <a th:href="@{/admin/dashboard}"
+              ><i class="fas fa-chart-bar"></i> <span>Dashboard</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/users}"
+              ><i class="fas fa-users"></i> <span>Users</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/products}"
+              ><i class="fas fa-box"></i> <span>Products</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/categories}"
+              ><i class="fas fa-tags"></i> <span>Categories</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/orders}" class="active"
+              ><i class="fas fa-shopping-cart"></i> <span>Orders</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/}"><i class="fas fa-home"></i> <span>Home</span></a>
+          </li>
+          <li>
+            <a th:href="@{/logout}"
+              ><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a
+            >
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Collapsible Sidebar Toggle -->
+      <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <main class="admin-main">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="admin-header">
+            <th:block th:replace="~{fragments/theme-toggle :: buttonAdmin}"></th:block>
+          <h1><i class="fas fa-shopping-cart"></i> Manage Orders</h1>
+          <p>Track and manage all orders</p>
+        </div>
+
+        <div th:if="${success}" class="admin-alert admin-alert-success">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="admin-alert admin-alert-error">
+          <i class="fas fa-exclamation-circle"></i>
+          <span th:text="${error}"></span>
+        </div>
+
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h2><i class="fas fa-list"></i> Order List</h2>
+            <div class="admin-table-actions">
+              <div class="bulk-actions">
+                <select id="bulkStatusSelect" class="bulk-status-select">
+                  <option value="">-- Select status --</option>
+                  <option value="pending">Pending</option>
+                  <option value="pending_payment">Pending Payment</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="shipping">Shipping</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <button id="bulkUpdateBtn" class="admin-btn admin-btn-status admin-btn-sm" disabled>
+                  <i class="fas fa-check"></i> Confirm
+                </button>
+              </div>
+              <span class="admin-summary-count">
+                <i class="fas fa-shopping-cart"></i>
+                Total: <strong th:text="${#lists.size(orders)}">0</strong> orders
+              </span>
+            </div>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col">
+                  <input type="checkbox" id="selectAllCheckbox" />
+                </th>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Order Date</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                th:each="order : ${orders}"
+                th:id="'order-' + ${order.orderId}"
+              >
+                <td class="checkbox-col">
+                  <input type="checkbox" class="order-checkbox" th:value="${order.orderId}" />
+                </td>
+                <td>
+                  <strong th:text="'#' + ${order.orderId}"></strong>
+                </td>
+                <td>
+                  <div class="customer-info">
+                    <strong th:text="${order.user?.username ?: 'N/A'}"></strong>
+                  </div>
+                </td>
+                <td>
+                  <span
+                    th:if="${order.orderDate != null}"
+                    th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+                  ></span>
+                  <span th:if="${order.orderDate == null}">-</span>
+                </td>
+                <td>
+                  <strong
+                    class="text-success money-display"
+                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  ></strong>
+                </td>
+                <td>
+                  <span
+                    class="admin-status-label"
+                    th:classappend="${order.status == 'pending'} ? 'admin-status-pending' :
+                                                      (${order.status == 'pending_payment'} ? 'admin-status-payment' :
+                                                      (${order.status == 'confirmed'} ? 'admin-status-confirmed' :
+                                                      (${order.status == 'shipping'} ? 'admin-status-shipping' :
+                                                      (${order.status == 'completed'} ? 'admin-status-completed' :
+                                                      'admin-status-cancelled'))))"
+                    th:text="${order.status == 'pending' ? 'PENDING' :
+                                               (order.status == 'pending_payment' ? 'PENDING PAYMENT' :
+                                               (order.status == 'confirmed' ? 'CONFIRMED' :
+                                               (order.status == 'shipping' ? 'SHIPPING' :
+                                               (order.status == 'completed' ? 'COMPLETED' :
+                                               (order.status == 'cancelled' ? 'CANCELLED' : (order.status ?: 'PENDING'))))))}"
+                  ></span>
+                </td>
+                <td>
+                  <div class="admin-actions">
+                    <a
+                      th:href="@{/admin/orders/{id}(id=${order.orderId})}"
+                      class="admin-btn admin-btn-info admin-btn-sm"
+                    >
+                      <i class="fas fa-eye"></i> View Details
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(orders)}">
+                <td colspan="7" class="text-center text-muted">
+                  <i class="fas fa-shopping-cart"></i> No orders found
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-primary">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${#lists.size(orders)}">0</h3>
+              <p>Total Orders</p>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-warning">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${pendingCount}">0</h3>
+              <p>Pending</p>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-info">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${shippingCount}">0</h3>
+              <p>Shipping</p>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${completedCount}">0</h3>
+              <p>Completed</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-revenue-summary">
+          <div class="admin-form-container">
+            <div class="admin-form-header">
+              <h2><i class="fas fa-chart-line"></i> Revenue Overview</h2>
+            </div>
+            <div class="admin-stats-grid">
+              <div class="admin-stat-card admin-stat-large">
+                <div class="admin-stat-icon admin-stat-success">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    class="money-display money-large money-highlight"
+                    th:text="${#numbers.formatDecimal(#aggregates.sum(orders.![totalAmount]), 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  >
+                    0 VND
+                  </h3>
+                  <p>Total Revenue</p>
+                </div>
+              </div>
+              <div class="admin-stat-card admin-stat-large">
+                <div class="admin-stat-icon admin-stat-primary">
+                  <i class="fas fa-calculator"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    class="money-display money-large"
+                    th:text="${#numbers.formatDecimal(#aggregates.avg(orders.![totalAmount]), 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                    th:if="${!#lists.isEmpty(orders)}"
+                  >
+                    0 VND
+                  </h3>
+                  <h3 th:if="${#lists.isEmpty(orders)}">0 VND</h3>
+                  <p>Average Value</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Auto-hide flash messages after 5 seconds
+      document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+          const alerts = document.querySelectorAll(".admin-alert");
+          alerts.forEach((alert) => {
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 300);
+          });
+        }, 5000);
+      });
+
+      // Toggle dropdown menu
+      function toggleDropdown(id, event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        const dropdown = document.getElementById(id);
+        const isVisible = dropdown.style.display !== "none";
+
+        // Hide all dropdowns first
+        document.querySelectorAll(".admin-dropdown-menu").forEach((menu) => {
+          menu.style.display = "none";
+        });
+
+        if (!isVisible) {
+          dropdown.style.display = "block";
+          // On mobile, use fixed positioning with calculated coordinates
+          if (window.innerWidth <= 768) {
+            const btn = event ? event.currentTarget : dropdown.previousElementSibling;
+            const rect = btn.getBoundingClientRect();
+            dropdown.style.top = rect.bottom + "px";
+            dropdown.style.left = rect.left + "px";
+            dropdown.style.right = "auto";
+          }
+        }
+      }
+
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".admin-dropdown")) {
+          document.querySelectorAll(".admin-dropdown-menu").forEach((menu) => {
+            menu.style.display = "none";
+          });
+        }
+      });
+
+      // Update status via AJAX (no page refresh)
+      function updateStatus(orderId, newStatus, statusText, event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        // Get the status button and dropdown
+        const statusButton = document.querySelector(
+          "#status-" + orderId,
+        ).previousElementSibling;
+        const dropdown = document.getElementById("status-" + orderId);
+
+        // Disable button to prevent double clicks
+        if (statusButton) {
+          statusButton.style.pointerEvents = "none";
+          statusButton.style.opacity = "0.7";
+        }
+
+        const csrfToken =
+          document.querySelector('meta[name="_csrf"]')?.content ||
+          document.querySelector('input[name="_csrf"]')?.value;
+
+        fetch("/admin/orders/" + orderId + "/status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRF-Token": csrfToken,
+          },
+          body: "status=" + newStatus,
+        })
+          .then((response) => {
+            if (response.ok) {
+              // Update status badge without page refresh
+              updateStatusBadge(orderId, newStatus, statusText);
+
+              // Show success message
+              showAlert("Status updated successfully!", "success");
+            } else {
+              showAlert("Failed to update status!", "error");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            showAlert("An error occurred!", "error");
+          })
+          .finally(() => {
+            // Re-enable button
+            if (statusButton) {
+              statusButton.style.pointerEvents = "auto";
+              statusButton.style.opacity = "1";
+            }
+          });
+
+        // Close dropdown
+        if (dropdown) {
+          dropdown.style.display = "none";
+        }
+      }
+
+      // Update status badge display
+      function updateStatusBadge(orderId, status, statusText) {
+        const badge = document.querySelector(
+          "#order-" + orderId + " .admin-status-label",
+        );
+        if (badge) {
+          // Update badge text
+          badge.textContent = statusText.toUpperCase();
+
+          // Update badge class
+          badge.className = "admin-status-label";
+          if (status === "pending") {
+            badge.classList.add("admin-status-pending");
+          } else if (status === "pending_payment") {
+            badge.classList.add("admin-status-payment");
+          } else if (status === "confirmed") {
+            badge.classList.add("admin-status-confirmed");
+          } else if (status === "shipping") {
+            badge.classList.add("admin-status-shipping");
+          } else if (status === "completed") {
+            badge.classList.add("admin-status-completed");
+          } else if (status === "cancelled") {
+            badge.classList.add("admin-status-cancelled");
+          }
+        }
+      }
+
+      // Show alert message
+      function showAlert(message, type) {
+        const main = document.querySelector(".admin-main");
+        const alertDiv = document.createElement("div");
+        alertDiv.className =
+          "admin-alert " +
+          (type === "success" ? "admin-alert-success" : "admin-alert-error");
+        alertDiv.innerHTML =
+          '<i class="fas fa-' +
+          (type === "success" ? "check-circle" : "exclamation-circle") +
+          '"></i><span>' +
+          message +
+          "</span>";
+        main.insertBefore(alertDiv, main.firstChild);
+
+        // Auto-hide after 3 seconds
+        setTimeout(function () {
+          alertDiv.style.opacity = "0";
+          setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
+      }
+
+      // Bulk actions functionality
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+      const bulkStatusSelect = document.getElementById('bulkStatusSelect');
+      const bulkUpdateBtn = document.getElementById('bulkUpdateBtn');
+
+      // Select all checkbox
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+          orderCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+          });
+          updateBulkButtonState();
+        });
+      }
+
+      // Individual checkbox change
+      orderCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          updateBulkButtonState();
+          // Update select all checkbox state
+          const allChecked = Array.from(orderCheckboxes).every(cb => cb.checked);
+          const someChecked = Array.from(orderCheckboxes).some(cb => cb.checked);
+          if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+          }
+        });
+      });
+
+      // Select status change
+      if (bulkStatusSelect) {
+        bulkStatusSelect.addEventListener('change', updateBulkButtonState);
+      }
+
+      // Update bulk button state
+      function updateBulkButtonState() {
+        const selectedCount = document.querySelectorAll('.order-checkbox:checked').length;
+        const selectedStatus = bulkStatusSelect ? bulkStatusSelect.value : '';
+
+        if (bulkUpdateBtn) {
+          bulkUpdateBtn.disabled = selectedCount === 0 || selectedStatus === '';
+        }
+      }
+
+      // Confirm bulk update
+      if (bulkUpdateBtn) {
+        bulkUpdateBtn.addEventListener('click', function() {
+          const selectedCheckboxes = document.querySelectorAll('.order-checkbox:checked');
+          const selectedStatus = bulkStatusSelect ? bulkStatusSelect.value : '';
+          const selectedStatusText = bulkStatusSelect ? bulkStatusSelect.options[bulkStatusSelect.selectedIndex].text : '';
+
+          if (selectedCheckboxes.length === 0 || selectedStatus === '') {
+            showAlert('Please select at least one order and a status!', 'error');
+            return;
+          }
+
+          // Show confirmation modal
+          showConfirmModal(selectedCheckboxes.length, selectedStatusText);
+        });
+      }
+
+      // Confirmation modal
+      function showConfirmModal(count, statusText) {
+        const modal = document.getElementById('confirmModal');
+        const modalMessage = document.getElementById('confirmModalMessage');
+        const confirmBtn = document.getElementById('confirmModalBtn');
+        const cancelBtn = document.getElementById('cancelModalBtn');
+
+        if (modal && modalMessage) {
+          modalMessage.textContent = `Do you want to update the status to "${statusText}" for the ${count} selected orders?`;
+          modal.style.display = 'flex';
+
+          confirmBtn.onclick = function() {
+            executeBulkUpdate();
+            modal.style.display = 'none';
+          };
+
+          cancelBtn.onclick = function() {
+            modal.style.display = 'none';
+          };
+
+          // Close modal when clicking outside
+          modal.onclick = function(event) {
+            if (event.target === modal) {
+              modal.style.display = 'none';
+            }
+          };
+        }
+      }
+
+      // Execute bulk update
+      function executeBulkUpdate() {
+        const selectedCheckboxes = document.querySelectorAll('.order-checkbox:checked');
+        const selectedStatus = bulkStatusSelect ? bulkStatusSelect.value : '';
+        const selectedStatusText = bulkStatusSelect ? bulkStatusSelect.options[bulkStatusSelect.selectedIndex].text : '';
+        const orderIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        if (orderIds.length === 0) return;
+
+        const csrfToken =
+          document.querySelector('meta[name="_csrf"]')?.content ||
+          document.querySelector('input[name="_csrf"]')?.value;
+
+        // Update each order
+        let completed = 0;
+        let failed = 0;
+
+        orderIds.forEach(orderId => {
+          fetch("/admin/orders/" + orderId + "/status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "X-CSRF-Token": csrfToken,
+            },
+            body: "status=" + selectedStatus,
+          })
+            .then(response => {
+              if (response.ok) {
+                updateStatusBadge(orderId, selectedStatus, selectedStatusText);
+                completed++;
+              } else {
+                failed++;
+              }
+            })
+            .catch(error => {
+              console.error("Error:", error);
+              failed++;
+            })
+            .finally(() => {
+              if (completed + failed === orderIds.length) {
+                // Reset form
+                selectAllCheckbox.checked = false;
+                orderCheckboxes.forEach(cb => cb.checked = false);
+                bulkStatusSelect.value = '';
+                updateBulkButtonState();
+
+                if (failed === 0) {
+                  showAlert(`Successfully updated status for ${completed} orders!`, 'success');
+                } else {
+                  showAlert(`Successfully updated ${completed} orders, failed ${failed} orders!`, 'error');
+                }
+              }
+            });
+        });
+      }
+    </script>
+
+    <!-- Confirmation Modal -->
+<div id="confirmModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-question-circle"></i> Confirm</h3>
+        </div>
+        <div class="modal-body">
+          <p id="confirmModalMessage"></p>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelModalBtn" class="admin-btn admin-btn-secondary">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button id="confirmModalBtn" class="admin-btn admin-btn-primary">
+            <i class="fas fa-check"></i> Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
+      <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
+
+  </body>
+</html>

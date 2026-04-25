@@ -1,0 +1,151 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Result - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+      .payment-result-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        text-align: center;
+        border: 1px solid var(--color-border);
+      }
+      .result-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+      }
+      .success-icon {
+        color: var(--color-success);
+      }
+      .error-icon {
+        color: var(--color-danger);
+      }
+      .result-title {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+        color: var(--color-text);
+      }
+      .result-message {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        margin-bottom: 30px;
+      }
+      .order-details {
+        text-align: left;
+        background: var(--color-surface-raised);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        border: 1px solid var(--color-border);
+      }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 1rem;
+      }
+      .detail-row:last-child {
+        margin-bottom: 0;
+        padding-top: 10px;
+        border-top: 1px dashed var(--color-border-strong);
+        font-weight: bold;
+      }
+      .detail-label {
+        color: var(--color-text-muted);
+      }
+      .detail-value {
+        color: var(--color-text);
+        font-weight: 500;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+      .btn-momo {
+        background: #ae2070;
+        color: white;
+        border-color: #ae2070;
+      }
+      .btn-momo:hover {
+        background: #8e185b;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <div class="container">
+      <div class="payment-result-container">
+        
+        <div th:if="${success}">
+          <div class="result-icon success-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h1 class="result-title">Payment Successful!</h1>
+          <p class="result-message" th:text="${message}"></p>
+          
+          <div class="order-details">
+            <div class="detail-row" th:if="${orderId != null}">
+              <span class="detail-label">Order ID:</span>
+              <span class="detail-value" th:text="'#' + ${orderId}"></span>
+            </div>
+            <div class="detail-row" th:if="${transId != null}">
+              <span class="detail-label">MoMo Transaction ID:</span>
+              <span class="detail-value" th:text="${transId}"></span>
+            </div>
+            <div class="detail-row" th:if="${amount != null}">
+              <span class="detail-label">Amount Paid:</span>
+              <span class="detail-value" th:text="${#numbers.formatDecimal(amount, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <a href="/user/orders" class="btn btn-primary">View Orders</a>
+            <a href="/" class="btn">Back to Home</a>
+          </div>
+        </div>
+
+        <div th:if="${!success}">
+          <div class="result-icon error-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <h1 class="result-title">Payment Unsuccessful</h1>
+          <p class="result-message" th:text="${error != null ? error : message}"></p>
+          
+          <div class="order-details">
+            <div class="detail-row" th:if="${orderId != null}">
+              <span class="detail-label">Order ID:</span>
+              <span class="detail-value" th:text="'#' + ${orderId}"></span>
+            </div>
+             <div class="detail-row" th:if="${resultCode != null}">
+              <span class="detail-label">MoMo Error Code:</span>
+              <span class="detail-value" th:text="${resultCode}"></span>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <a th:if="${orderId != null}" th:href="@{/cart/payment/{id}(id=${orderId})}" class="btn btn-momo">Retry Payment</a>
+            <a href="/user/orders" class="btn btn-primary">View Orders</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div th:replace="~{footer :: footer}"></div>
+    <script th:src="@{/JavaScript/header.js}"></script>
+  </body>
+</html>

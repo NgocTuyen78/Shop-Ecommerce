@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Product - Computer Shop Admin</title>
+    <link rel="stylesheet" th:href="@{/CSS/admin.css}">
+    <link rel="stylesheet" th:href="@{/CSS/admin-category.css}">
+    <link rel="stylesheet" th:href="@{/CSS/admin-product.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo">
+                <h2><i class="fas fa-laptop"></i> Admin Panel</h2>
+            </div>
+            <ul class="admin-nav">
+                <li><a th:href="@{/admin/dashboard}"><i class="fas fa-chart-bar"></i> <span>Dashboard</span></a></li>
+                <li><a th:href="@{/admin/users}"><i class="fas fa-users"></i> <span>Users</span></a></li>
+                <li><a th:href="@{/admin/products}" class="active"><i class="fas fa-box"></i> <span>Products</span></a></li>
+                <li><a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> <span>Categories</span></a></li>
+                <li><a th:href="@{/admin/orders}"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
+                <li><a th:href="@{/}"><i class="fas fa-home"></i> <span>Home</span></a></li>
+                <li><a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+            </ul>
+        </nav>
+
+        <!-- Collapsible Sidebar Toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand sidebar">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <main class="admin-main">
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-header">
+            <th:block th:replace="~{fragments/theme-toggle :: buttonAdmin}"></th:block>
+                <h1><i class="fas fa-plus-circle"></i> Add New Product</h1>
+                <div class="admin-breadcrumb">
+                    <a th:href="@{/admin/products}"><i class="fas fa-arrow-left"></i> Back to product list</a>
+                </div>
+            </div>
+
+            
+            <div th:if="${success}" class="admin-alert admin-alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="admin-alert admin-alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            
+            <div class="admin-form-container">
+                <div class="admin-form-header">
+                    <h2><i class="fas fa-box"></i> Product Information</h2>
+                    <div class="form-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="formProgress"></div>
+                        </div>
+                        <span class="progress-text">0% Completed</span>
+                    </div>
+                </div>
+                
+                <form th:action="@{/admin/products/create}" 
+                      method="post" 
+                      th:object="${newProduct}" 
+                      class="admin-form"
+                      id="addProductForm">
+                    
+                    
+                    <div class="form-section">
+                        <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="productName"><i class="fas fa-box"></i> Product Name *</label>
+                                <input type="text" 
+                                       id="productName"
+                                       th:field="*{productName}" 
+                                       placeholder="Enter product name..." 
+                                       required
+                                       oninput="validateForm()">
+                                <div class="field-help">Product name should be clear and understandable</div>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="categoryId"><i class="fas fa-tag"></i> Category *</label>
+                                <select id="categoryId" name="categoryId" required onchange="validateForm()">
+                                    <option value="">-- Select Category --</option>
+                                    <option th:each="category : ${categories}" 
+                                            th:value="${category.categoryId}" 
+                                            th:text="${category.categoryName}"></option>
+                                </select>
+                                <div class="field-help">Select a category suitable for the product</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="form-section">
+                        <h3><i class="fas fa-dollar-sign"></i> Pricing Information</h3>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="price"><i class="fas fa-money-bill-wave"></i> Selling Price (VND) *</label>
+                                <div class="input-with-currency">
+                                    <input type="number"
+                                           id="price"
+                                           th:field="*{price}" 
+                                           min="1000"
+                                           step="1000"
+                                           placeholder="0" 
+                                           required
+                                           oninput="validateForm(); formatPrice(this)">
+                                    <span class="currency-symbol">VND</span>
+                                </div>
+                                <div class="field-help">Minimum price: 1,000 VND</div>
+                                <div id="pricePreview" class="price-preview"></div>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="stockQuantity"><i class="fas fa-warehouse"></i> Stock Quantity</label>
+                                <input type="number" 
+                                       id="stockQuantity"
+                                       th:field="*{stockQuantity}" 
+                                       min="0"
+                                       placeholder="0"
+                                       oninput="validateForm(); updateStockStatus(this.value)">
+                                <div class="field-help">Leave blank if no stock</div>
+                                <div id="stockStatus" class="stock-status"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-image"></i> Product Image</h3>
+                        <div class="admin-form-group">
+                            <label for="imageUrl"><i class="fas fa-link"></i> Image URL</label>
+                            <input type="url"
+                                   id="imageUrl"
+                                   name="imageUrl"
+                                   placeholder="https://example.com/image.jpg"
+                                   oninput="updatePreview(); previewImage(this.value)">
+                            <div class="field-help">Paste the direct URL of the product image</div>
+                            <div id="imagePreviewContainer" style="margin-top:0.75rem; display:none;">
+                                <img id="imagePreviewImg" src="" alt="Image preview"
+                                     style="max-width:200px; max-height:200px; border-radius:8px; border:1px solid #dee2e6; object-fit:contain;">
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="form-section">
+                        <h3><i class="fas fa-align-left"></i> Detailed Description</h3>
+                        <div class="admin-form-group">
+                            <label for="description"><i class="fas fa-file-alt"></i> Product Description</label>
+                            <textarea id="description"
+                                     th:field="*{description}" 
+                                     placeholder="Enter detailed product description..." 
+                                     rows="6"
+                                     oninput="validateForm(); updateCharCount(this)"></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/1000 characters
+                            </div>
+                            <div class="field-help">A detailed description helps customers better understand the product</div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="form-section">
+                        <h3><i class="fas fa-eye"></i> Product Preview</h3>
+                        <div class="product-preview" id="productPreview">
+                            <div class="preview-card">
+                                <div class="preview-header">
+                                    <div class="preview-category">No category selected</div>
+                                    <div class="preview-stock">No info</div>
+                                </div>
+                                <div id="previewImageWrapper" style="margin:0.75rem 0; display:none;">
+                                    <img id="previewImage" src="" alt="Preview"
+                                         style="width:100%; max-height:180px; object-fit:contain; border-radius:8px;">
+                                </div>
+                                <h4 class="preview-name">Product name will appear here</h4>
+                                <div class="preview-price">0 VND</div>
+                                <div class="preview-description">Product description will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    
+                    <div class="admin-form-actions">
+                        <button type="submit" class="admin-btn admin-btn-success" id="submitBtn" disabled>
+                            <i class="fas fa-plus"></i> Add Product
+                        </button>
+                        <a th:href="@{/admin/products}" class="admin-btn admin-btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="reset" class="admin-btn admin-btn-warning" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Form validation and preview
+        function validateForm() {
+            const form = document.getElementById('addProductForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressFill = document.getElementById('formProgress');
+            const progressText = document.querySelector('.progress-text');
+            
+            const productName = document.getElementById('productName').value.trim();
+            const categoryId = document.getElementById('categoryId').value;
+            const price = document.getElementById('price').value;
+            
+            let progress = 0;
+            let isValid = true;
+            
+            // Check required fields
+            if (productName) progress += 33.33;
+            else isValid = false;
+            
+            if (categoryId) progress += 33.33;
+            else isValid = false;
+            
+            if (price && parseFloat(price) >= 1000) progress += 33.34;
+            else isValid = false;
+            
+            // Update progress bar
+            progressFill.style.width = progress + '%';
+            progressText.textContent = Math.round(progress) + '% Completed';
+            
+            // Update submit button
+            submitBtn.disabled = !isValid;
+            
+            // Update preview
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const productName = document.getElementById('productName').value.trim();
+            const categorySelect = document.getElementById('categoryId');
+            const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text || 'No category selected';
+            const price = document.getElementById('price').value;
+            const stock = document.getElementById('stockQuantity').value;
+            const description = document.getElementById('description').value.trim();
+            const imageUrl = document.getElementById('imageUrl') ? document.getElementById('imageUrl').value.trim() : '';
+            
+            document.querySelector('.preview-name').textContent = productName || 'Product name will appear here';
+            document.querySelector('.preview-category').textContent = categoryName;
+            document.querySelector('.preview-price').textContent = price ? formatCurrency(price) + ' VND' : '0 VND';
+            document.querySelector('.preview-description').textContent = description || 'Product description will appear here';
+            
+            // Update preview image
+            const previewImageWrapper = document.getElementById('previewImageWrapper');
+            const previewImage = document.getElementById('previewImage');
+            if (imageUrl && previewImageWrapper && previewImage) {
+                previewImage.src = imageUrl;
+                previewImageWrapper.style.display = 'block';
+            } else if (previewImageWrapper) {
+                previewImageWrapper.style.display = 'none';
+            }
+            
+            const stockElement = document.querySelector('.preview-stock');
+            if (stock && parseInt(stock) > 0) {
+                stockElement.textContent = 'In stock: ' + stock;
+                stockElement.className = 'preview-stock in-stock';
+            } else {
+                stockElement.textContent = 'Out of stock';
+                stockElement.className = 'preview-stock out-stock';
+            }
+        }
+
+        function previewImage(url) {
+            const container = document.getElementById('imagePreviewContainer');
+            const img = document.getElementById('imagePreviewImg');
+            if (url && container && img) {
+                img.src = url;
+                img.onerror = function() { container.style.display = 'none'; };
+                img.onload = function() { container.style.display = 'block'; };
+                container.style.display = 'block';
+            } else if (container) {
+                container.style.display = 'none';
+            }
+        }
+
+
+        function formatPrice(input) {
+            const value = input.value;
+            if (value) {
+                document.getElementById('pricePreview').textContent = 
+                    'Preview: ' + formatCurrency(value) + ' VND';
+            } else {
+                document.getElementById('pricePreview').textContent = '';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount);
+        }
+
+        function updateStockStatus(value) {
+            const statusElement = document.getElementById('stockStatus');
+            const stock = parseInt(value);
+            
+            if (isNaN(stock) || stock === 0) {
+                statusElement.textContent = 'Status: Out of stock';
+                statusElement.className = 'stock-status out-of-stock';
+            } else if (stock <= 5) {
+                statusElement.textContent = 'Status: Low stock';
+                statusElement.className = 'stock-status low-stock';
+            } else if (stock <= 20) {
+                statusElement.textContent = 'Status: Very few in stock';
+                statusElement.className = 'stock-status medium-stock';
+            } else {
+                statusElement.textContent = 'Status: In stock';
+                statusElement.className = 'stock-status in-stock';
+            }
+        }
+
+        function updateCharCount(textarea) {
+            const count = textarea.value.length;
+            document.getElementById('charCount').textContent = count;
+            
+            const counter = document.querySelector('.char-counter');
+            if (count > 1000) {
+                counter.style.color = '#e74c3c';
+                textarea.value = textarea.value.substring(0, 1000);
+                updateCharCount(textarea);
+            } else if (count > 800) {
+                counter.style.color = '#f39c12';
+            } else {
+                counter.style.color = '#7f8c8d';
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('addProductForm').reset();
+            setTimeout(() => {
+                validateForm();
+                document.getElementById('pricePreview').textContent = '';
+                document.getElementById('stockStatus').textContent = '';
+                document.getElementById('charCount').textContent = '0';
+                document.querySelector('.char-counter').style.color = '#7f8c8d';
+            }, 100);
+        }
+
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            validateForm();
+            
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.admin-alert');
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
+        });
+    </script>
+
+    <style>
+        /* Additional styles for add product page */
+        .form-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .form-section h3 {
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .input-with-currency {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-weight: 600;
+            pointer-events: none;
+        }
+
+        .field-help {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .price-preview {
+            font-size: 0.85rem;
+            color: #28a745;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stock-status {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stock-status.in-stock { color: #28a745; }
+        .stock-status.medium-stock { color: #ffc107; }
+        .stock-status.low-stock { color: #fd7e14; }
+        .stock-status.out-of-stock { color: #dc3545; }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .product-preview {
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .preview-card {
+            padding: 1.5rem;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .preview-category {
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .preview-stock {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .preview-stock.in-stock {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .preview-stock.out-stock {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .preview-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .preview-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #28a745;
+            margin: 0 0 1rem 0;
+        }
+
+        .preview-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .admin-breadcrumb {
+            margin-top: 0.5rem;
+        }
+
+        .admin-breadcrumb a {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .admin-breadcrumb a:hover {
+            color: #007bff;
+        }
+    </style>
+    <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
+    <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
+
+</body>
+</html>

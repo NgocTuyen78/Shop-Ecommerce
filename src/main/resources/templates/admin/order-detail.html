@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Details - Computer Shop Admin</title>
+    <link rel="stylesheet" th:href="@{/CSS/admin.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/admin-order.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="admin-container">
+      <nav class="admin-sidebar" id="adminSidebar">
+        <div class="admin-logo">
+          <h2><i class="fas fa-laptop"></i> Admin Panel</h2>
+        </div>
+        <ul class="admin-nav">
+          <li>
+            <a th:href="@{/admin/dashboard}"
+              ><i class="fas fa-chart-bar"></i> <span>Dashboard</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/users}"
+              ><i class="fas fa-users"></i> <span>Users</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/products}"
+              ><i class="fas fa-box"></i> <span>Products</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/categories}"
+              ><i class="fas fa-tags"></i> <span>Categories</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/admin/orders}" class="active"
+              ><i class="fas fa-shopping-cart"></i> <span>Orders</span></a
+            >
+          </li>
+          <li>
+            <a th:href="@{/}"><i class="fas fa-home"></i> <span>Home</span></a>
+          </li>
+          <li>
+            <a th:href="@{/logout}"
+              ><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a
+            >
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Collapsible Sidebar Toggle -->
+      <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <main class="admin-main">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="admin-header">
+            <th:block th:replace="~{fragments/theme-toggle :: buttonAdmin}"></th:block>
+          <h1>
+            <i class="fas fa-file-alt"></i> Order Details #<span
+              th:text="${order.orderId}"
+            ></span>
+          </h1>
+          <div class="admin-breadcrumb">
+            <a th:href="@{/admin/orders}"
+              ><i class="fas fa-arrow-left"></i> Back to order list</a
+            >
+          </div>
+        </div>
+
+        <div th:if="${success}" class="admin-alert admin-alert-success">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="admin-alert admin-alert-error">
+          <i class="fas fa-exclamation-circle"></i>
+          <span th:text="${error}"></span>
+        </div>
+
+        <div class="admin-order-container">
+          <div class="admin-order-header">
+            <div class="admin-order-info">
+              <h2>Order Information</h2>
+              <div class="admin-order-status">
+                <span
+                  class="admin-badge admin-badge-lg"
+                  th:classappend="${order.status == 'pending'} ? 'admin-badge-warning' :
+                                                  (${order.status == 'pending_payment'} ? 'admin-badge-secondary' :
+                                                  (${order.status == 'confirmed'} ? 'admin-badge-info' :
+                                                  (${order.status == 'shipping'} ? 'admin-badge-primary' :
+                                                  (${order.status == 'completed'} ? 'admin-badge-success' :
+                                                  'admin-badge-danger'))))"
+                  th:text="${order.status == 'pending' ? 'Pending' :
+                                           (order.status == 'pending_payment' ? 'Pending Payment' :
+                                           (order.status == 'confirmed' ? 'Confirmed' :
+                                           (order.status == 'shipping' ? 'Shipping' :
+                                           (order.status == 'completed' ? 'Completed' :
+                                           (order.status == 'cancelled' ? 'Cancelled' : (order.status ?: 'Pending'))))))}"
+                ></span>
+              </div>
+            </div>
+            <div class="admin-order-actions">
+              <div class="admin-dropdown">
+                <button
+                  class="admin-btn admin-btn-primary dropdown-toggle"
+                  type="button"
+                  onclick="toggleStatusDropdown()"
+                >
+                  <i class="fas fa-edit"></i> Update Status
+                </button>
+                <div
+                  id="status-dropdown"
+                  class="admin-dropdown-menu"
+                  style="display: none"
+                >
+                  <form
+                    th:action="@{/admin/orders/{id}/status(id=${order.orderId})}"
+                    method="post"
+                  >
+                    <input type="hidden" name="status" value="pending" />
+                    <button type="submit" class="dropdown-item">
+                      <i class="fas fa-clock"></i> Pending
+                    </button>
+                  </form>
+                  <form
+                    th:action="@{/admin/orders/{id}/status(id=${order.orderId})}"
+                    method="post"
+                  >
+                    <input type="hidden" name="status" value="confirmed" />
+                    <button type="submit" class="dropdown-item">
+                      <i class="fas fa-check"></i> Confirmed
+                    </button>
+                  </form>
+                  <form
+                    th:action="@{/admin/orders/{id}/status(id=${order.orderId})}"
+                    method="post"
+                  >
+                    <input type="hidden" name="status" value="shipping" />
+                    <button type="submit" class="dropdown-item">
+                      <i class="fas fa-truck"></i> Shipping
+                    </button>
+                  </form>
+                  <form
+                    th:action="@{/admin/orders/{id}/status(id=${order.orderId})}"
+                    method="post"
+                  >
+                    <input type="hidden" name="status" value="completed" />
+                    <button type="submit" class="dropdown-item">
+                      <i class="fas fa-check-circle"></i> Completed
+                    </button>
+                  </form>
+                  <form
+                    th:action="@{/admin/orders/{id}/status(id=${order.orderId})}"
+                    method="post"
+                  >
+                    <input type="hidden" name="status" value="cancelled" />
+                    <button type="submit" class="dropdown-item text-danger">
+                      <i class="fas fa-times"></i> Cancelled
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-order-grid">
+            <div class="admin-order-section">
+              <h3><i class="fas fa-user"></i> Customer Information</h3>
+              <div class="admin-info-list">
+                <div class="admin-info-item">
+                  <label>Customer Name:</label>
+                  <span th:text="${order.user?.username ?: 'N/A'}"></span>
+                </div>
+                <div class="admin-info-item">
+                  <label>Role:</label>
+                  <span
+                    class="admin-badge admin-badge-secondary"
+                    th:text="${order.user?.role?.roleName ?: 'N/A'}"
+                  ></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-order-section">
+              <h3><i class="fas fa-shopping-cart"></i> Order Information</h3>
+              <div class="admin-info-list">
+                <div class="admin-info-item">
+                  <label>Order ID:</label>
+                  <span th:text="'#' + ${order.orderId}"></span>
+                </div>
+                <div class="admin-info-item">
+                  <label>Order Date:</label>
+                  <span
+                    th:if="${order.orderDate != null}"
+                    th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+                  ></span>
+                  <span th:if="${order.orderDate == null}">Not updated</span>
+                </div>
+                <div class="admin-info-item">
+                  <label>Status:</label>
+                  <span
+                    class="admin-badge"
+                    th:classappend="${order.status == 'pending'} ? 'admin-badge-warning' :
+                                                      (${order.status == 'pending_payment'} ? 'admin-badge-secondary' :
+                                                      (${order.status == 'confirmed'} ? 'admin-badge-info' :
+                                                      (${order.status == 'shipping'} ? 'admin-badge-primary' :
+                                                      (${order.status == 'completed'} ? 'admin-badge-success' :
+                                                      'admin-badge-danger'))))"
+                    th:text="${order.status == 'pending' ? 'Pending' :
+                                               (order.status == 'pending_payment' ? 'Pending Payment' :
+                                               (order.status == 'confirmed' ? 'Confirmed' :
+                                               (order.status == 'shipping' ? 'Shipping' :
+                                               (order.status == 'completed' ? 'Completed' :
+                                               (order.status == 'cancelled' ? 'Cancelled' : (order.status ?: 'Pending'))))))}"
+                  ></span>
+                </div>
+                <div class="admin-info-item">
+                  <label>Total Amount:</label>
+                  <strong
+                    class="text-success money-display money-large money-highlight"
+                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  ></strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-order-section">
+            <h3><i class="fas fa-list"></i> Product Details</h3>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="detail : ${order.orderDetails}">
+                    <td>
+                      <div class="product-info">
+                        <strong
+                          th:text="${detail.product?.productName ?: 'N/A'}"
+                        ></strong>
+                        <small
+                          class="text-muted"
+                          th:text="${detail.product?.category?.categoryName ?: ''}"
+                        ></small>
+                      </div>
+                    </td>
+                    <td
+                      th:text="${#numbers.formatDecimal(detail.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                    ></td>
+                    <td>
+                      <span
+                        class="admin-badge admin-badge-secondary"
+                        th:text="${detail.quantity}"
+                      ></span>
+                    </td>
+                    <td>
+                      <strong
+                        th:text="${#numbers.formatDecimal(detail.price * detail.quantity, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                      ></strong>
+                    </td>
+                  </tr>
+                  <tr th:if="${#lists.isEmpty(order.orderDetails)}">
+                    <td colspan="4" class="text-center text-muted">
+                      <i class="fas fa-box-open"></i> No products in this order
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot th:if="${!#lists.isEmpty(order.orderDetails)}">
+                  <tr class="admin-table-total">
+                    <td colspan="3"><strong>Total:</strong></td>
+                    <td>
+                      <strong
+                        class="text-success"
+                        th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                      ></strong>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-order-stats">
+            <div class="admin-stats-grid">
+              <div class="admin-stat-card">
+                <div class="admin-stat-icon admin-stat-primary">
+                  <i class="fas fa-box"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3 th:text="${#lists.size(order.orderDetails)}">0</h3>
+                  <p>Product Types</p>
+                </div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-icon admin-stat-info">
+                  <i class="fas fa-shopping-basket"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    th:text="${#aggregates.sum(order.orderDetails.![quantity])}"
+                  >
+                    0
+                  </h3>
+                  <p>Total Quantity</p>
+                </div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-icon admin-stat-success">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  ></h3>
+                  <p>Total Value</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Auto-hide flash messages after 5 seconds
+      document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+          const alerts = document.querySelectorAll(".admin-alert");
+          alerts.forEach((alert) => {
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 300);
+          });
+        }, 5000);
+      });
+
+      // Toggle status dropdown
+      function toggleStatusDropdown(event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        const dropdown = document.getElementById("status-dropdown");
+        dropdown.style.display =
+          dropdown.style.display === "none" ? "block" : "none";
+      }
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".admin-dropdown")) {
+          const dropdown = document.getElementById("status-dropdown");
+          if (dropdown) {
+            dropdown.style.display = "none";
+          }
+        }
+      });
+    </script>
+    <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
+      <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
+
+  </body>
+</html>

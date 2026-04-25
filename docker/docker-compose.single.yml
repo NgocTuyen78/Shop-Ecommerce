@@ -1,0 +1,40 @@
+version: '3.8'
+
+# Docker Compose for Single Database Mode
+# Usage (Linux/macOS): docker compose -f docker/docker-compose.single.yml up postgres -d
+#   Then run the app:  ./mvnw spring-boot:run
+#
+# Usage (Windows/Docker Desktop): Same commands.
+#   The app connects to localhost:5432 (mapped by the `ports` section below).
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: computershop-db
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=computershop
+      - POSTGRES_USER=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init:/init:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks:
+      - computershop-network
+
+# Networks
+networks:
+  computershop-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  postgres-data:

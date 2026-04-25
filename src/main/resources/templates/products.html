@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Products - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/products.css}" />
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <h1>Products List</h1>
+          <p class="text-muted">
+            <span
+              th:if="${searchQuery != null and !#strings.isEmpty(searchQuery)}"
+            >
+              Search results for "<span
+                class="search-highlight"
+                th:text="${searchQuery}"
+              ></span
+              >" -
+            </span>
+            <span
+              th:if="${selectedCategory != null and !#strings.isEmpty(selectedCategory)}"
+            >
+              Category:
+              <span
+                class="category-highlight"
+                th:text="${selectedCategory}"
+              ></span>
+              -
+            </span>
+            Found
+            <span class="products-count"
+              ><i class="fas fa-box"></i
+              ><strong th:text="${totalProducts}">0</strong> products</span
+            >
+          </p>
+        </div>
+
+        <div class="filters-section">
+          <form method="get" action="/products" id="filter-form">
+            <input type="hidden" name="search" th:value="${searchQuery}" />
+            <!-- hidden fields that carry the real (×1000) values to the server -->
+            <input
+              type="hidden"
+              id="minPriceHidden"
+              name="minPrice"
+              th:value="${minPrice}"
+            />
+            <input
+              type="hidden"
+              id="maxPriceHidden"
+              name="maxPrice"
+              th:value="${maxPrice}"
+            />
+            <div class="filters">
+              <div class="filter-group">
+                <label>Category:</label>
+                <select class="form-control" name="category">
+                  <option value="">All</option>
+                  <option
+                    th:each="cat : ${categories}"
+                    th:value="${cat.categoryName}"
+                    th:text="${cat.categoryName}"
+                    th:selected="${cat.categoryName == selectedCategory}"
+                  >
+                    Category
+                  </option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label
+                  >Price Range
+                  <small class="text-muted">(thousands ₫)</small>:</label
+                >
+                <input
+                  type="number"
+                  id="minPriceDisplay"
+                  placeholder="Min"
+                  th:value="${minPrice != null ? minPrice / 1000 : ''}"
+                  class="form-control price-input"
+                  min="0"
+                  step="1"
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  id="maxPriceDisplay"
+                  placeholder="Max"
+                  th:value="${maxPrice != null ? maxPrice / 1000 : ''}"
+                  class="form-control price-input"
+                  min="0"
+                  step="1"
+                />
+              </div>
+              <div class="filter-group">
+                <label>Sort:</label>
+                <select class="form-control" name="sort">
+                  <option value="name" th:selected="${currentSort == 'name'}">
+                    Product Name
+                  </option>
+                  <option
+                    value="popular"
+                    th:selected="${currentSort == 'popular'}"
+                  >
+                    Most Popular
+                  </option>
+                  <option
+                    value="price-asc"
+                    th:selected="${currentSort == 'price-asc'}"
+                  >
+                    Price Low to High
+                  </option>
+                  <option
+                    value="price-desc"
+                    th:selected="${currentSort == 'price-desc'}"
+                  >
+                    Price High to Low
+                  </option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="products-grid">
+          <div class="product-card" th:each="product : ${products}">
+            <div class="product-image">
+              <img
+                th:src="${product.image != null ? product.image.imageUrl : '/Images/placeholder.svg'}"
+                th:alt="${product.productName}"
+                src="/Images/placeholder.svg"
+                onerror="this.src = '/Images/placeholder.svg'"
+              />
+              <div class="product-overlay" th:if="${session.role != 'admin'}">
+                <button
+                  type="button"
+                  class="btn btn-primary add-to-cart-btn"
+                  th:attr="data-id=${product.productId}"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3 class="product-name" th:text="${product.productName}">
+                Sample product
+              </h3>
+              <div
+                class="product-brand"
+                th:text="${product.category != null ? product.category.categoryName : 'N/A'}"
+              >
+                Category
+              </div>
+              <div class="product-price">
+                <span
+                  class="price"
+                  th:text="${#numbers.formatDecimal(product.price,1,'COMMA',0,'POINT')} + ' ₫'"
+                  >0 ₫</span
+                >
+              </div>
+              <div
+                class="product-stock"
+                th:if="${product.stockQuantity <= 5 and product.stockQuantity > 0}"
+                style="color: orange; font-size: 0.9em"
+              >
+                Only <span th:text="${product.stockQuantity}">0</span> left in stock
+              </div>
+              <div
+                class="product-stock"
+                th:if="${product.stockQuantity == 0}"
+                style="color: red; font-size: 0.9em"
+              >
+                Out of stock
+              </div>
+              <div class="product-actions">
+                <a
+                  th:href="@{/products/{id}(id=${product.productId})}"
+                  class="btn btn-detail"
+                >
+                  View Details
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div
+            th:if="${products == null or #lists.isEmpty(products)}"
+            class="empty-state"
+          >
+            <div class="empty-message">
+              <h3>No products found</h3>
+              <p
+                th:if="${searchQuery != null and !#strings.isEmpty(searchQuery)}"
+              >
+                No products match the keyword "<strong
+                  th:text="${searchQuery}"
+                ></strong
+                >"
+              </p>
+              <p
+                th:if="${selectedCategory != null and !#strings.isEmpty(selectedCategory)}"
+              >
+                No products found in category "<strong
+                  th:text="${selectedCategory}"
+                ></strong
+                >"
+              </p>
+              <p
+                th:if="${(searchQuery == null or #strings.isEmpty(searchQuery)) and (selectedCategory == null or #strings.isEmpty(selectedCategory))}"
+              >
+                There are currently no products in the store.
+              </p>
+              <a href="/products" class="btn btn-primary"
+                >View all products</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-wrapper" th:if="${totalPages > 1}">
+          <nav class="pagination" aria-label="Product pagination">
+            <!-- Previous page -->
+            <a th:if="${currentPage > 0}"
+               th:href="@{/products(page=${currentPage - 1}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+               class="page-btn page-btn-nav"
+               aria-label="Previous page">
+              &laquo; Prev
+            </a>
+            <span th:if="${currentPage == 0}" class="page-btn page-btn-nav disabled">&laquo; Prev</span>
+
+            <!-- Page numbers -->
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+              <a th:if="${i != currentPage}"
+                 th:href="@{/products(page=${i}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                 th:text="${i + 1}"
+                 class="page-btn">1</a>
+              <span th:if="${i == currentPage}"
+                    th:text="${i + 1}"
+                    class="page-btn page-btn-active">1</span>
+            </th:block>
+
+            <!-- Next page -->
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/products(page=${currentPage + 1}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+               class="page-btn page-btn-nav"
+               aria-label="Next page">
+              Next &raquo;
+            </a>
+            <span th:if="${currentPage >= totalPages - 1}" class="page-btn page-btn-nav disabled">Next &raquo;</span>
+          </nav>
+          <div class="pagination-info">
+            Page <strong th:text="${currentPage + 1}">1</strong> / <strong th:text="${totalPages}">1</strong>
+            &nbsp;&bull;&nbsp; Total <strong th:text="${totalProducts}">0</strong> products
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <div th:replace="~{footer :: footer}"></div>
+
+    <script th:src="@{/JavaScript/header.js}"></script>
+    <script th:src="@{/JavaScript/main.js}"></script>
+    <script>
+      // Multiply display values (in thousands) by 1000 before submitting
+      document
+        .getElementById("filter-form")
+        .addEventListener("submit", function () {
+          const minDisplay = document
+            .getElementById("minPriceDisplay")
+            .value.trim();
+          const maxDisplay = document
+            .getElementById("maxPriceDisplay")
+            .value.trim();
+          const minHidden = document.getElementById("minPriceHidden");
+          const maxHidden = document.getElementById("maxPriceHidden");
+
+          if (minDisplay !== "") {
+            minHidden.value = parseFloat(minDisplay) * 1000;
+          } else {
+            minHidden.value = "";
+          }
+          if (maxDisplay !== "") {
+            maxHidden.value = parseFloat(maxDisplay) * 1000;
+          } else {
+            maxHidden.value = "";
+          }
+        });
+    </script>
+  </body>
+</html>

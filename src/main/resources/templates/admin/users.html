@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Computer Shop Admin</title>
+    <link rel="stylesheet" th:href="@{/CSS/admin.css}">
+    <link rel="stylesheet" th:href="@{/CSS/admin-user.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo">
+                <h2><i class="fas fa-laptop"></i> Admin Panel</h2>
+            </div>
+            <ul class="admin-nav">
+                <li><a th:href="@{/admin/dashboard}"><i class="fas fa-chart-bar"></i> <span>Dashboard</span></a></li>
+                <li><a th:href="@{/admin/users}" class="active"><i class="fas fa-users"></i> <span>Users</span></a></li>
+                <li><a th:href="@{/admin/products}"><i class="fas fa-box"></i> <span>Products</span></a></li>
+                <li><a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> <span>Categories</span></a></li>
+                <li><a th:href="@{/admin/orders}"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
+                <li><a th:href="@{/}"><i class="fas fa-home"></i> <span>Home</span></a></li>
+                <li><a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+            </ul>
+        </nav>
+
+        <!-- Collapsible Sidebar Toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand sidebar">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <main class="admin-main">
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-header">
+            <th:block th:replace="~{fragments/theme-toggle :: buttonAdmin}"></th:block>
+                <h1><i class="fas fa-users"></i> Manage Users</h1>
+                <p>Manage information and status of all users</p>
+            </div>
+
+            
+            <div th:if="${success}" class="admin-alert admin-alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="admin-alert admin-alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            
+            <div class="admin-table-container">
+                <div class="user-table-header">
+                    <h2 class="user-table-title">
+                        <i class="fas fa-users"></i> 
+                        User List
+                    </h2>
+                    <div class="user-count-badge">
+                        <i class="fas fa-user-friends"></i>
+                        Total: <strong th:text="${#lists.size(users)}">0</strong> users
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> ID</th>
+                            <th><i class="fas fa-user"></i> Username</th>
+
+                            <th><i class="fas fa-user-tag"></i> Role</th>
+                            <th><i class="fas fa-calendar-alt"></i> Created At</th>
+                            <th><i class="fas fa-cogs"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td>
+                                <span class="user-id-badge" th:text="${user.userId}"></span>
+                            </td>
+                            <td>
+                                <div class="user-info-cell">
+                                    <div class="user-avatar" th:text="${#strings.substring(user.username,0,1).toUpperCase()}">U</div>
+                                    <div class="user-details">
+                                        <span class="username" th:text="${user.username}"></span>
+                                        <small class="user-status">
+                                            <i th:class="${user.enabled} ? 'fas fa-circle text-success' : 'fas fa-circle text-danger'"></i>
+                                            <span th:text="${user.enabled} ? 'Active' : 'Locked'">Active</span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="admin-badge" 
+                                      th:classappend="${user.role.roleName == 'admin'} ? 'admin-badge-danger' : 'admin-badge-primary'"
+                                      th:text="${user.role.roleName}">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="date-cell">
+                                    <i class="fas fa-calendar text-muted"></i>
+                                    <span class="date-text">Not updated</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="admin-actions">
+                                    <form th:action="@{/admin/users/{id}/toggle-status(id=${user.userId})}" 
+                                          method="post" 
+                                          style="display: inline-block;"
+                                          th:if="${user.role.roleName != 'admin'}">
+                                        <button type="submit" 
+                                                th:class="${user.enabled} ? 'admin-btn admin-btn-warning' : 'admin-btn admin-btn-success'"
+                                                th:title="${user.enabled} ? 'Lock account' : 'Unlock account'">
+                                            <i th:class="${user.enabled} ? 'fas fa-lock' : 'fas fa-lock-open'"></i>
+                                            <span th:text="${user.enabled} ? 'Lock' : 'Unlock'">Lock</span>
+                                        </button>
+                                    </form>
+                                    <div th:if="${user.role.roleName != 'admin'}" class="protected-admin" style="color: #6c757d;">
+                                        <i class="fas fa-unlock-alt"></i> Unprotected
+                                    </div>
+                                    <div th:if="${user.role.roleName == 'admin'}" class="protected-admin">
+                                        <i class="fas fa-shield-alt"></i> Protected Admin
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="6" class="empty-state-cell">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <h3>No users found</h3>
+                                    <p>No users have been created in the system yet</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon admin-stat-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="admin-stat-content">
+                        <h3 th:text="${#lists.size(users)}">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon admin-stat-success">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="admin-stat-content">
+                        <h3 th:text="${adminCount}">0</h3>
+                        <p>Admin</p>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon admin-stat-info">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="admin-stat-content">
+                        <h3 th:text="${customerCount}">0</h3>
+                        <p>Customers</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.admin-alert');
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
+        });
+    </script>
+    <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
+    <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
+
+</body>
+</html>

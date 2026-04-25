@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Details - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      .order-detail-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      .order-detail-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .order-detail-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .back-link {
+        color: #007bff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+      }
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .order-info-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .order-info-card h2 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #eee;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .info-item label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+      }
+      .info-item span {
+        color: #333;
+        font-size: 1rem;
+      }
+      .order-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .status-pending_payment {
+        background-color: #fce7f3;
+        color: #9d174d;
+      }
+      .status-confirmed {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      .status-shipping {
+        background-color: #cce5ff;
+        color: #004085;
+      }
+      .status-completed {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .order-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+      .order-items-table th {
+        background-color: #f8f9fa;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
+      .order-items-table td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .order-items-table tbody tr:hover {
+        background-color: #f8f9fa;
+      }
+      .product-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .product-info img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+      .product-name {
+        font-weight: 500;
+      }
+      .product-category {
+        color: #666;
+        font-size: 0.85rem;
+      }
+      .order-total-row {
+        background-color: #f8f9fa;
+        font-weight: bold;
+      }
+      .order-total-row td {
+        padding: 1rem 0.75rem;
+        font-size: 1.1rem;
+      }
+      .total-amount {
+        color: #28a745;
+        font-size: 1.3rem;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+      .empty-state i {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+      }
+      /* MoMo Payment Section Styles */
+      .momo-payment-section {
+        background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 1.5rem;
+      }
+      .momo-payment-section h2 {
+        color: white;
+        border-bottom-color: rgba(255, 255, 255, 0.3);
+        margin-bottom: 1rem;
+      }
+      .momo-payment-section .info-item label {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .momo-payment-section .info-item span {
+        color: white;
+      }
+      .momo-qr-container {
+        text-align: center;
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        display: inline-block;
+      }
+      .momo-qr-container img {
+        max-width: 200px;
+        height: auto;
+      }
+      .momo-amount {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #ffd700;
+        text-align: center;
+        margin: 1rem 0;
+      }
+      .momo-phone {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+      }
+      .momo-instructions {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      .momo-instructions h4 {
+        margin-top: 0;
+        color: #ffd700;
+      }
+      .momo-instructions ol {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+      .momo-instructions li {
+        margin-bottom: 0.5rem;
+      }
+      .status-pending-payment {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      .status-paid {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="~{header :: header}"></div>
+
+    <div class="order-detail-container">
+      <div class="order-detail-header">
+        <div>
+          <h1>
+            <i class="fas fa-file-invoice"></i> Order Details #<span
+              th:text="${order.orderId}"
+            ></span>
+          </h1>
+          <a th:href="@{/user/orders}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to orders list
+          </a>
+        </div>
+      </div>
+
+      <div th:if="${error}" class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+      </div>
+
+      <div th:if="${order != null}">
+        <div class="order-info-card">
+          <h2><i class="fas fa-info-circle"></i> Order Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Order ID:</label>
+              <span>#<span th:text="${order.orderId}"></span></span>
+            </div>
+            <div class="info-item">
+              <label>Order Date:</label>
+              <span
+                th:if="${order.orderDate != null}"
+                th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+              ></span>
+              <span th:if="${order.orderDate == null}">Not updated</span>
+            </div>
+            <div class="info-item">
+              <label>Status:</label>
+              <span
+                class="order-status"
+                th:classappend="${order.status == 'pending' ? 'status-pending' :
+                                 (order.status == 'pending_payment' ? 'status-pending_payment' :
+                                 (order.status == 'confirmed' ? 'status-confirmed' :
+                                 (order.status == 'shipping' ? 'status-shipping' :
+                                 (order.status == 'completed' ? 'status-completed' :
+                                 'status-cancelled'))))}"
+                th:text="${order.status == 'pending' ? 'Processing' :
+                          (order.status == 'pending_payment' ? 'Pending Payment' :
+                          (order.status == 'confirmed' ? 'Confirmed' :
+                          (order.status == 'shipping' ? 'Shipping' :
+                          (order.status == 'completed' ? 'Completed' :
+                          (order.status == 'cancelled' ? 'Cancelled' : (order.status ?: 'Pending'))))))}"
+              >
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Shipping Address:</label>
+              <span th:text="${order.shippingAddress ?: 'Not updated'}"></span>
+            </div>
+            <div class="info-item">
+              <label>Payment Method:</label>
+              <span th:text="${order.paymentMethod != null ? (order.paymentMethod == 'COD' ? 'Cash on Delivery (COD)' : order.paymentMethod) : 'Not updated'}"></span>
+            </div>
+            <div class="info-item">
+              <label>Total Amount:</label>
+              <span
+                class="total-amount"
+                th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+              ></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pay Now Banner for pending_payment orders -->
+        <div
+          th:if="${order.status == 'pending_payment'}"
+          style="
+            background: #fce7f3;
+            border: 1px solid #f9a8d4;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+          "
+        >
+          <div>
+            <strong style="color: #9d174d"
+              ><i class="fas fa-credit-card"></i> Unpaid Order</strong
+            >
+            <p style="margin: 4px 0 0; color: #be185d; font-size: 0.9rem">
+              Please complete payment for the order to be processed.
+            </p>
+          </div>
+          <a
+            th:href="@{/cart/payment/{id}(id=${order.orderId})}"
+            style="
+              background: #ae2070;
+              color: white;
+              padding: 10px 22px;
+              border-radius: 20px;
+              text-decoration: none;
+              font-weight: 600;
+              white-space: nowrap;
+            "
+          >
+            <i class="fas fa-qrcode"></i> Pay Now
+          </a>
+        </div>
+
+        <div class="order-info-card">
+          <h2><i class="fas fa-list"></i> Products in Order</h2>
+          <table
+            class="order-items-table"
+            th:if="${!#lists.isEmpty(order.orderDetails)}"
+          >
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="detail : ${order.orderDetails}">
+                <td>
+                  <div class="product-info">
+                    <img
+                      th:src="${detail.product?.image != null ? detail.product.image.imageUrl : '/Images/placeholder.svg'}"
+                      alt="Product"
+                      onerror="this.src = '/Images/placeholder.svg'"
+                    />
+                    <div>
+                      <div
+                        class="product-name"
+                        th:text="${detail.product?.productName ?: 'N/A'}"
+                      ></div>
+                      <div
+                        class="product-category"
+                        th:text="${detail.product?.category?.categoryName ?: ''}"
+                      ></div>
+                    </div>
+                  </div>
+                </td>
+                <td
+                  th:text="${#numbers.formatDecimal(detail.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                ></td>
+                <td th:text="${detail.quantity}"></td>
+                <td>
+                  <strong
+                    th:text="${#numbers.formatDecimal(detail.price * detail.quantity, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  ></strong>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="order-total-row">
+                <td colspan="3" style="text-align: right">
+                  <strong>Total:</strong>
+                </td>
+                <td>
+                  <span
+                    class="total-amount"
+                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  ></span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+          <div
+            th:if="${#lists.isEmpty(order.orderDetails)}"
+            class="empty-state"
+          >
+            <i class="fas fa-box-open"></i>
+            <p>No products in this order</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="~{footer :: footer}"></div>
+    <script th:src="@{/JavaScript/header.js}"></script>
+  </body>
+</html>

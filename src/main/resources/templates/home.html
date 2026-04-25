@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home - ComputerShop</title>
+    <link rel="stylesheet" th:href="@{/CSS/style.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/header.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/footer.css}" />
+    <link rel="stylesheet" th:href="@{/CSS/home.css}" />
+</head>
+<body>
+    
+    <div th:replace="~{header :: header}"></div>
+
+    <main class="main-content">
+        
+        <!-- Newsletter Flash Messages -->
+        <div th:if="${newsletterSuccess}" class="newsletter-toast newsletter-success" id="newsletterAlert">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${newsletterSuccess}">Successfully subscribed!</span>
+        </div>
+        <div th:if="${newsletterError}" class="newsletter-toast newsletter-error" id="newsletterAlert">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${newsletterError}">Subscription error</span>
+        </div>
+
+        <section class="hero-banners">
+            <div class="container">
+                <div class="banners-grid">
+                    <div class="banner banner-main">
+                        <div class="banner-content">
+                            <h1 class="banner-title">High quality computer accessories</h1>
+                            <p class="banner-subtitle">Up to 50% off on all gaming products</p>
+                            <a href="/products" class="btn-banner">Shop now</a>
+                        </div>
+                    </div>
+                    
+                    <div class="banner banner-secondary">
+                        <div class="banner-content">
+                            <h2 class="banner-title">Pro Gaming Components</h2>
+                            <p class="banner-subtitle">Upgrade your setup with premium products</p>
+                            <a href="/products" class="btn-banner-secondary">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <section>
+                <div class="section-title">
+                    <h2>Featured Categories</h2>
+                    <a href="/products" class="muted">View all</a>
+                </div>
+                <div class="categories">
+                    <a th:each="cat : ${categories}" 
+                       th:href="@{/products(category=${cat.categoryName})}" 
+                       class="category category-link">
+                        <div class="category-icon">
+                            <span th:if="${cat.categoryName.toLowerCase().contains('keyboard') or cat.categoryName.toLowerCase().contains('bàn phím')}">⌨️</span>
+                            <span th:if="${cat.categoryName.toLowerCase().contains('mouse') or cat.categoryName.toLowerCase().contains('chuột')}">🖱️</span>
+                            <span th:if="${cat.categoryName.toLowerCase().contains('headset') or cat.categoryName.toLowerCase().contains('tai nghe')}">🎧</span>
+                            <span th:if="${cat.categoryName.toLowerCase().contains('chair') or cat.categoryName.toLowerCase().contains('ghế')}">💺</span>
+                            <span th:if="${cat.categoryName.toLowerCase().contains('monitor') or cat.categoryName.toLowerCase().contains('màn hình')}">🖥️</span>
+                            <span th:if="${cat.categoryName.toLowerCase().contains('speaker') or cat.categoryName.toLowerCase().contains('loa')}">🔊</span>
+                            <span th:if="${!cat.categoryName.toLowerCase().contains('keyboard') and !cat.categoryName.toLowerCase().contains('bàn phím') 
+                                          and !cat.categoryName.toLowerCase().contains('mouse') and !cat.categoryName.toLowerCase().contains('chuột')
+                                          and !cat.categoryName.toLowerCase().contains('headset') and !cat.categoryName.toLowerCase().contains('tai nghe')
+                                          and !cat.categoryName.toLowerCase().contains('chair') and !cat.categoryName.toLowerCase().contains('ghế')
+                                          and !cat.categoryName.toLowerCase().contains('monitor') and !cat.categoryName.toLowerCase().contains('màn hình')
+                                          and !cat.categoryName.toLowerCase().contains('speaker') and !cat.categoryName.toLowerCase().contains('loa')}">🔧</span>
+                        </div>
+                        <h3 th:text="${cat.categoryName}">Category</h3>
+                    </a>
+                    <div th:if="${categories == null or #lists.isEmpty(categories)}" class="no-categories">
+                        <p>No product categories yet</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="section-title">
+                    <h2>Featured Products</h2>
+                    <a href="/products?sort=popular" class="muted">See more</a>
+                </div>
+
+                <div class="products-grid">
+
+                    <div class="product-card" th:each="product : ${featuredProducts}">
+                        <div class="product-image">
+                            <img th:src="${product.image != null ? product.image.imageUrl : '/Images/placeholder.svg'}" 
+                                 th:alt="${product.productName}" 
+                                 src="/Images/placeholder.svg"
+                                 onerror="this.src='/Images/placeholder.svg'" />
+                            <div class="product-overlay" th:if="${session.role != 'admin'}">
+                                <button type="button" class="btn btn-primary add-to-cart-btn" th:attr="data-id=${product.productId}">Add to cart</button>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name" th:text="${product.productName}">Sample product</h3>
+                            <div class="product-brand" th:text="${product.category != null ? product.category.categoryName : 'N/A'}">Category</div>
+                            <div class="product-price">
+                                <span class="price" th:text="${#numbers.formatDecimal(product.price,1,'COMMA',0,'POINT')} + ' ₫'">0 ₫</span>
+                            </div>
+                            <div class="product-actions">
+                                <a th:href="@{/products/{id}(id=${product.productId})}" class="btn btn-detail">
+                                    View details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div th:if="${featuredProducts == null or #lists.isEmpty(featuredProducts)}" class="no-products-message">
+                        <p>Updating new products...</p>
+                        <a href="/products" class="btn btn-primary">View all products</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    
+    <div th:replace="~{footer :: footer}"></div>
+
+    <script th:src="@{/JavaScript/header.js}"></script>
+    <script th:src="@{/JavaScript/main.js}"></script>
+</body>
+</html>
