@@ -1,0 +1,16 @@
+<!-- vnpay_return.html: Trang hiển thị kết quả thanh toán VNPay trả về cho người dùng (success/fail). -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>VNPay Payment Result</title>
+</head>
+<body>
+    <h2>Kết quả thanh toán VNPay</h2>
+    <div th:if="${result != null}">
+        <p th:text="${result}"></p>
+    </div>
+    <div th:if="${result == null}">
+        <p>Không có dữ liệu kết quả.</p>
+    </div>
+</body>
+</html>

@@ -60,6 +60,9 @@ public class CartController {
     @Autowired
     private VNPayService vnPayService;
 
+    @Autowired
+    private VNPayController vnPayController;
+
     // ─── Xem giỏ hàng ────────────────────────────────────────────────────────
 
     @GetMapping("/view")
@@ -351,7 +354,8 @@ public class CartController {
                 }
             } else if ("VNPAY".equals(paymentMethod)) {
                 long amount = Math.round(totalAmount);
-                String orderInfo = "Payment for order " + savedOrder.getOrderId() + " at ComputerShop";
+                //String orderInfo = "Payment for order " + savedOrder.getOrderId() + " at ComputerShop";
+                String orderInfo = "ThanhToan";
                 String ipAddr = request.getRemoteAddr();
                 
                 // Go to VNPay Sandbox
@@ -396,7 +400,8 @@ public class CartController {
             }
             
             long amount  = Math.round(order.getTotalAmount());
-            String orderInfo = "Payment for order " + orderId + " at ComputerShop";
+            //String orderInfo = "Payment for order " + orderId + " at ComputerShop";
+            String orderInfo = "ThanhToan";
             String ipAddr = request.getRemoteAddr();
 
             // Tạo thanh toán qua MoMo Sandbox hoặc VNPay Sandbox

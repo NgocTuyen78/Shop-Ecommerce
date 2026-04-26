@@ -1,3 +1,4 @@
+// VnpayService.java: Chứa logic xử lý tạo thanh toán, truy vấn giao dịch, hoàn tiền với VNPay (giao tiếp với API VNPay).
 package com.computershop.service.impl;
 
 import java.net.URLEncoder;
@@ -17,6 +18,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.stereotype.Service;
 
+import com.computershop.config.VnpayConfig;
+
 /**
  * VNPay Sandbox Payment Service.
  * 
@@ -25,13 +28,6 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class VNPayService {
-
-    // Credentials mặc định của VNPay Sandbox (Public Sandbox)
-    private static final String VNP_TMN_CODE = "CGXZLS0Z";
-    private static final String VNP_HASH_SECRET = "XNBCJFAKAZQSGTARRLGCHVGHGFNUDZVJ";
-    private static final String VNP_PAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    private static final String VNP_RETURN_URL = "http://localhost:2345/payment/vnpay/return";
-
     /**
      * Helper encode URL theo chuẩn RFC 3986 (VNPay yêu cầu dấu cách = %20, không phải +)
      */
@@ -44,27 +40,23 @@ public class VNPayService {
     }
 
     public String createPaymentUrl(Integer orderId, long amount, String orderInfo, String ipAddr) {
-        String vnp_Version = "2.1.0";
-        String vnp_Command = "pay";
-        String vnp_TxnRef = String.valueOf(orderId) + "_" + System.currentTimeMillis();
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", VnpayConfig.vnp_Version);
+        vnp_Params.put("vnp_Command", VnpayConfig.vnp_Command);
+        vnp_Params.put("vnp_TmnCode", VnpayConfig.vnp_TmnCode);
+        vnp_Params.put("vnp_Amount", String.valueOf(amount*100));
+        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_BankCode", "NCB"); //test
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
 
         if (ipAddr == null || ipAddr.contains(":")) {
             ipAddr = "127.0.0.1"; // Default to IPv4 if IPv6 or null
         }
-
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
-        vnp_Params.put("vnp_TmnCode", VNP_TMN_CODE);
-        // Số tiền vnpay yêu cầu nhân với 100
-        vnp_Params.put("vnp_Amount", String.valueOf(amount * 100));
-        vnp_Params.put("vnp_CurrCode", "VND");
-        
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+            
+        vnp_Params.put("vnp_TxnRef", orderId + "_" + VnpayConfig.getRandomNumber(8));
         vnp_Params.put("vnp_OrderInfo", orderInfo);
         vnp_Params.put("vnp_OrderType", "other");
-        vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VNP_RETURN_URL);
         vnp_Params.put("vnp_IpAddr", ipAddr);
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
@@ -103,10 +95,9 @@ public class VNPayService {
         }
 
         String queryUrl = query.toString();
-        String vnp_SecureHash = hmacSHA512(VNP_HASH_SECRET, hashData.toString());
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+        String vnp_SecureHash = hmacSHA512(VnpayConfig.secretKey, hashData.toString());
         
-        return VNP_PAY_URL + "?" + queryUrl;
+        return VnpayConfig.vnp_PayUrl + "?" + queryUrl + "&vnp_SecureHash=" + vnp_SecureHash;
     }
 
     public boolean verifySignature(Map<String, String[]> requestParams) {
@@ -145,17 +136,25 @@ public class VNPayService {
             }
         }
 
-        String signValue = hmacSHA512(VNP_HASH_SECRET, hashData.toString());
+        String signValue = hmacSHA512(VnpayConfig.secretKey, hashData.toString());
         return signValue.equals(vnp_SecureHash);
     }
 
-    private static String hmacSHA512(String key, String data) {
+    public static String hmacSHA512(final String key, final String data) {
         try {
-            Mac hmac512 = Mac.getInstance("HmacSHA512");
-            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+            if (key == null || data == null) throw new NullPointerException();
+            final Mac hmac512 = Mac.getInstance("HmacSHA512");
+            
+            // SỬA TẠI ĐÂY: Ép kiểu UTF_8 cho Key
+            byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
+            final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
             hmac512.init(secretKey);
-            byte[] result = hmac512.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
+            
+            // SỬA TẠI ĐÂY: Ép kiểu UTF_8 cho Data
+            byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
+            byte[] result = hmac512.doFinal(dataBytes);
+            
+            StringBuilder sb = new StringBuilder(2 * result.length);
             for (byte b : result) {
                 sb.append(String.format("%02x", b & 0xff));
             }
