@@ -57,7 +57,7 @@
         color: var(--color-primary, #6366f1);
         font-weight: 600;
       }
-      .momo-info-section {
+      .vnpay-info-section {
         text-align: center;
         padding: 20px;
         background: #fff3e0;
@@ -66,7 +66,7 @@
         border: 2px solid #ff9800;
         display: none;
       }
-      .momo-info-section h3 {
+      .vnpay-info-section h3 {
         color: #e65100;
         margin-bottom: 10px;
       }
@@ -121,7 +121,6 @@
                   </span>
                 </label>
 
-                <!-- VNPay Option Hidden As Requested -->
                 <label class="payment-option" id="vnpayOption" >
                   <input type="radio" name="paymentMethod" value="VNPAY" id="payVNPAY" 
                          onchange="togglePaymentInfo()"/>
@@ -133,22 +132,9 @@
                     </span>
                   </span>
                 </label>
-
-                <label class="payment-option" id="momoOption">
-                  <input type="radio" name="paymentMethod" value="MOMO" id="payMOMO" 
-                         onchange="togglePaymentInfo()" />
-                  <span class="payment-label">
-                    <span class="payment-icon">📱</span>
-                    <span>
-                      <strong>Pay via MoMo E-Wallet</strong><br>
-                      <small class="text-muted">Pay using MoMo app</small>
-                    </span>
-                  </span>
-                </label>
               </div>
 
-              <!-- VNPay info preview -->
-              <div class="momo-info-section" id="vnpayInfoSection">
+              <div class="vnpay-info-section" id="vnpayInfoSection">
                 <h3>💳 Payment via VNPay (Sandbox)</h3>
                 <div class="payment-amount">
                   Amount:
@@ -156,17 +142,6 @@
                 </div>
                 <p>The system will redirect you to the actual VNPay payment gateway.</p>
                 <p><em>(Use NCB bank, enter test code)</em></p>
-              </div>
-
-              <!-- MoMo info preview -->
-              <div class="momo-info-section" id="momoInfoSection" style="display:none; border-color: #a50064; background: #ffebee;">
-                <h3 style="color: #a50064;">📱 Payment via MoMo (Sandbox)</h3>
-                <div class="payment-amount">
-                  Amount:
-                  <span th:text="${#numbers.formatDecimal(cartTotal, 1, 'COMMA', 0, 'POINT')}">0</span> ₫
-                </div>
-                <p>The system will redirect you to the actual MoMo payment gateway.</p>
-                <p><em>(Use MoMo test account)</em></p>
               </div>
             </div>
 
@@ -227,12 +202,6 @@
         var vnpayRadio = document.getElementById('payVNPAY');
         if (vnpaySection && vnpayRadio) {
           vnpaySection.style.display = vnpayRadio.checked ? 'block' : 'none';
-        }
-
-        var momoSection = document.getElementById('momoInfoSection');
-        var momoRadio = document.getElementById('payMOMO');
-        if (momoSection && momoRadio) {
-          momoSection.style.display = momoRadio.checked ? 'block' : 'none';
         }
       }
 

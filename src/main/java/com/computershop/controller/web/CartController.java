@@ -21,8 +21,6 @@ import com.computershop.main.entities.Order;
 import com.computershop.main.entities.OrderDetail;
 import com.computershop.main.entities.Product;
 import com.computershop.service.impl.CartServiceImpl;
-import com.computershop.service.impl.MomoSandboxService;
-import com.computershop.service.impl.MomoService;
 import com.computershop.service.impl.VNPayService;
 import com.computershop.service.impl.OrderDetailServiceImpl;
 import com.computershop.service.impl.OrderServiceImpl;
@@ -52,16 +50,7 @@ public class CartController {
     private UserServiceImpl userService;
 
     @Autowired
-    private MomoService momoService;
-
-    @Autowired
-    private MomoSandboxService momoSandboxService;
-
-    @Autowired
     private VNPayService vnPayService;
-
-    @Autowired
-    private VNPayController vnPayController;
 
     // ─── Xem giỏ hàng ────────────────────────────────────────────────────────
 
@@ -343,16 +332,7 @@ public class CartController {
             session.setAttribute("cartCount", 0);
 
             // 5. Xử lý redirect tuỳ theo payment method
-            if ("MOMO".equals(paymentMethod)) {
-                String orderInfo = "Payment for order " + savedOrder.getOrderId() + " at ComputerShop";
-                var result = momoSandboxService.createPayment(savedOrder.getOrderId(), Math.round(totalAmount), orderInfo);
-                if (result.isSuccess()) {
-                    return "redirect:" + result.getPayUrl();
-                } else {
-                    redirectAttributes.addFlashAttribute("error", "MoMo payment creation error: " + result.getErrorMessage());
-                    return "redirect:/user/orders";
-                }
-            } else if ("VNPAY".equals(paymentMethod)) {
+            if ("VNPAY".equals(paymentMethod)) {
                 long amount = Math.round(totalAmount);
                 //String orderInfo = "Payment for order " + savedOrder.getOrderId() + " at ComputerShop";
                 String orderInfo = "ThanhToan";
@@ -404,19 +384,9 @@ public class CartController {
             String orderInfo = "ThanhToan";
             String ipAddr = request.getRemoteAddr();
 
-            // Tạo thanh toán qua MoMo Sandbox hoặc VNPay Sandbox
-            if ("MOMO".equals(order.getPaymentMethod())) {
-                var result = momoSandboxService.createPayment(orderId, amount, orderInfo);
-                if (result.isSuccess()) {
-                    return "redirect:" + result.getPayUrl();
-                } else {
-                    redirectAttributes.addFlashAttribute("error", "MoMo payment creation error: " + result.getErrorMessage());
-                    return "redirect:/user/orders";
-                }
-            } else {
-                String payUrl = vnPayService.createPaymentUrl(orderId, amount, orderInfo, ipAddr);
-                return "redirect:" + payUrl;
-            }
+            // Tạo thanh toán qua VNPay Sandbox
+            String payUrl = vnPayService.createPaymentUrl(orderId, amount, orderInfo, ipAddr);
+            return "redirect:" + payUrl;
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Could not create payment: " + e.getMessage());
