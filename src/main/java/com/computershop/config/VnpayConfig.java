@@ -1,6 +1,7 @@
 // VnpayConfig.java: Chứa cấu hình thông tin kết nối VNPay (tmnCode, hashSecret, url, returnUrl) lấy từ file cấu hình ứng dụng.
 package com.computershop.config;
 
+import java.security.SecureRandom;
 import java.util.Random;
 
 import org.springframework.context.annotation.Configuration;
@@ -10,10 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 @Configuration
 public class VnpayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:2345/payment/vnpay/return";
-    // public static String vnp_ReturnUrl = System.getenv("VNPAY_RETURN_URL") != null 
-    // ? System.getenv("VNPAY_RETURN_URL") 
-    // : "http://localhost:2345/payment/vnpay/return";
+    //public static String vnp_ReturnUrl = "http://localhost:2345/payment/vnpay/return";
+    public static String vnp_ReturnUrl = System.getenv("VNPAY_RETURN_URL") != null 
+    ? System.getenv("VNPAY_RETURN_URL") 
+    : "http://localhost:2345/payment/vnpay/return";
     public static String vnp_TmnCode = "SEJJN2NR";
 	public static String vnp_Version = "2.1.0";
     public static String vnp_Command = "pay";
@@ -35,7 +36,8 @@ public class VnpayConfig {
     }
 
     public static String getRandomNumber(int len) {
-        Random rnd = new Random();
+        //Random rnd = new Random();
+        SecureRandom rnd = new SecureRandom(); // Bảo mật và ngẫu nhiên hơn
         String chars = "0123456789";
         StringBuilder sb = new StringBuilder(len);
         for (int i = 0; i < len; i++) {

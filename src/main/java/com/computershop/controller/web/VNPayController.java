@@ -40,7 +40,9 @@ public class VNPayController {
         
         // 1. Xác thực chữ ký bảo mật
         boolean isValidSignature = vnPayService.verifySignature(requestParams);
-        
+        // THÊM DÒNG NÀY ĐỂ DEBUG
+        log.info("Ket qua kiem tra chu ky: {}", isValidSignature);
+
         // 2. Lấy các thông số cần thiết
         String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
         String vnp_TxnRef = request.getParameter("vnp_TxnRef"); // Định dạng: orderId_random

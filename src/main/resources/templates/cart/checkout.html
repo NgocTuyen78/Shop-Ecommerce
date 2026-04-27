@@ -205,6 +205,22 @@
         }
       }
 
+      // --- ĐOẠN QUAN TRỌNG NHẤT TÔI THÊM VÀO ĐÂY ---
+      document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        // Kiểm tra xem nút đã bị nhấn chưa
+        if (submitBtn.disabled) {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable nút và hiện thông báo đang xử lý
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        return true;
+      });
+
       // Init
       togglePaymentInfo();
     </script>

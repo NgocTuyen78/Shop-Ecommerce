@@ -95,6 +95,7 @@ public class VNPayService {
         }
 
         String queryUrl = query.toString();
+        System.out.println("--- CHUOI HASH GUI DI: " + hashData.toString()); ///TEST
         String vnp_SecureHash = hmacSHA512(VnpayConfig.secretKey, hashData.toString());
         
         return VnpayConfig.vnp_PayUrl + "?" + queryUrl + "&vnp_SecureHash=" + vnp_SecureHash;
@@ -136,6 +137,7 @@ public class VNPayService {
             }
         }
 
+        System.out.println("--- CHUOI HASH NHAN VE: " + hashData.toString());//test
         String signValue = hmacSHA512(VnpayConfig.secretKey, hashData.toString());
         return signValue.equals(vnp_SecureHash);
     }
