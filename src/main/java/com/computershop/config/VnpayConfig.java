@@ -15,11 +15,10 @@ public class VnpayConfig {
     public static String vnp_ReturnUrl = System.getenv("VNPAY_RETURN_URL") != null 
     ? System.getenv("VNPAY_RETURN_URL") 
     : "http://localhost:2345/payment/vnpay/return";
-    public static String vnp_TmnCode = "SEJJN2NR";
+    public static String vnp_TmnCode = "0CFIB18Z";
 	public static String vnp_Version = "2.1.0";
     public static String vnp_Command = "pay";
-    // public static String secretKey = "AFDSAMQDJ6MW97WPNW37NOI2K140WNGI";
-    public static String secretKey = "DRTP708076S1H1GP6ST91C7RT109NR94";
+    public static String secretKey = "FPO5M25YKFKXLLU8BHLI6X10UDXFICRV";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
     
     public static String getIpAddress(HttpServletRequest request) {

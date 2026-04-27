@@ -110,67 +110,67 @@ public class VNPayController {
     /**
      * URL IPN: VNPay Server gọi trực tiếp đến đây để cập nhật trạng thái đơn hàng ngầm.
      */
-    // @GetMapping("/ipn")
-    // @ResponseBody // Quan trọng: Trả về JSON/String thay vì trang HTML
-    // public Map<String, String> paymentIPN(HttpServletRequest request) {
-    //     Map<String, String[]> requestParams = request.getParameterMap();
+    @GetMapping("/ipn")
+    @ResponseBody // Quan trọng: Trả về JSON/String thay vì trang HTML
+    public Map<String, String> paymentIPN(HttpServletRequest request) {
+        Map<String, String[]> requestParams = request.getParameterMap();
         
-    //     // 1. Xác thực chữ ký
-    //     boolean isValidSignature = vnPayService.verifySignature(requestParams);
+        // 1. Xác thực chữ ký
+        boolean isValidSignature = vnPayService.verifySignature(requestParams);
         
-    //     // 2. Chuẩn bị Map phản hồi cho VNPay
-    //     Map<String, String> response = new HashMap<>();
+        // 2. Chuẩn bị Map phản hồi cho VNPay
+        Map<String, String> response = new HashMap<>();
 
-    //     if (!isValidSignature) {
-    //         response.put("RspCode", "97");
-    //         response.put("Message", "Invalid Checksum");
-    //         return response;
-    //     }
+        if (!isValidSignature) {
+            response.put("RspCode", "97");
+            response.put("Message", "Invalid Checksum");
+            return response;
+        }
 
-    //     try {
-    //         String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
-    //         String vnp_TxnRef = request.getParameter("vnp_TxnRef");
-    //         String vnp_Amount = request.getParameter("vnp_Amount"); // Số tiền (đã nhân 100)
+        try {
+            String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
+            String vnp_TxnRef = request.getParameter("vnp_TxnRef");
+            String vnp_Amount = request.getParameter("vnp_Amount"); // Số tiền (đã nhân 100)
 
-    //         // Parse ID đơn hàng
-    //         Integer originalOrderId = null;
-    //         if (vnp_TxnRef != null && vnp_TxnRef.contains("_")) {
-    //             originalOrderId = Integer.parseInt(vnp_TxnRef.split("_")[0]);
-    //         }
+            // Parse ID đơn hàng
+            Integer originalOrderId = null;
+            if (vnp_TxnRef != null && vnp_TxnRef.contains("_")) {
+                originalOrderId = Integer.parseInt(vnp_TxnRef.split("_")[0]);
+            }
 
-    //         if (originalOrderId == null) {
-    //             response.put("RspCode", "01");
-    //             response.put("Message", "Order not found");
-    //             return response;
-    //         }
+            if (originalOrderId == null) {
+                response.put("RspCode", "01");
+                response.put("Message", "Order not found");
+                return response;
+            }
 
-    //         // 3. Kiểm tra trạng thái đơn hàng trong DB (Tránh update đè nếu đã PAID)
-    //         // Giả sử bạn có hàm checkStatus trong orderService
-    //         // if (orderService.isAlreadyConfirmed(originalOrderId)) {
-    //         //     response.put("RspCode", "02");
-    //         //     response.put("Message", "Order already confirmed");
-    //         //     return response;
-    //         // }
+            // 3. Kiểm tra trạng thái đơn hàng trong DB (Tránh update đè nếu đã PAID)
+            // Giả sử bạn có hàm checkStatus trong orderService
+            // if (orderService.isAlreadyConfirmed(originalOrderId)) {
+            //     response.put("RspCode", "02");
+            //     response.put("Message", "Order already confirmed");
+            //     return response;
+            // }
 
-    //         // 4. Xử lý kết quả
-    //         if ("00".equals(vnp_ResponseCode)) {
-    //             // Thanh toán thành công -> Cập nhật DB
-    //             orderService.updateOrderStatus(originalOrderId, "confirmed");
-    //             log.info("[IPN] Thanh toán thành công đơn hàng #{}", originalOrderId);
-    //         } else {
-    //             // Thanh toán thất bại
-    //             log.info("[IPN] Giao dịch thất bại mã: {}", vnp_ResponseCode);
-    //         }
+            // 4. Xử lý kết quả
+            if ("00".equals(vnp_ResponseCode)) {
+                // Thanh toán thành công -> Cập nhật DB
+                orderService.updateOrderStatus(originalOrderId, "confirmed");
+                log.info("[IPN] Thanh toán thành công đơn hàng #{}", originalOrderId);
+            } else {
+                // Thanh toán thất bại
+                log.info("[IPN] Giao dịch thất bại mã: {}", vnp_ResponseCode);
+            }
 
-    //         response.put("RspCode", "00");
-    //         response.put("Message", "Confirm Success");
+            response.put("RspCode", "00");
+            response.put("Message", "Confirm Success");
 
-    //     } catch (Exception e) {
-    //         log.error("[IPN] Lỗi xử lý: {}", e.getMessage());
-    //         response.put("RspCode", "99");
-    //         response.put("Message", "Unknown Error");
-    //     }
+        } catch (Exception e) {
+            log.error("[IPN] Lỗi xử lý: {}", e.getMessage());
+            response.put("RspCode", "99");
+            response.put("Message", "Unknown Error");
+        }
 
-    //     return response;
-    // }
+        return response;
+    }
 }
