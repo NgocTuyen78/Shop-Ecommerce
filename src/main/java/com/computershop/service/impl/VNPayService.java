@@ -140,6 +140,50 @@ public class VNPayService {
         return signValue.equals(vnp_SecureHash);
     }
 
+//     public boolean verifySignature(Map<String, String[]> requestParams) {
+//     Map<String, String> fields = new HashMap<>();
+//     for (Map.Entry<String, String[]> entry : requestParams.entrySet()) {
+//         String fieldName = entry.getKey();
+//         String fieldValue = entry.getValue()[0];
+        
+//         // Chỉ lấy các tham số bắt đầu bằng vnp_ và bỏ qua tham số chữ ký
+//         if ((fieldValue != null) && (fieldValue.length() > 0) 
+//             && fieldName.startsWith("vnp_") 
+//             && !fieldName.equals("vnp_SecureHash") 
+//             && !fieldName.equals("vnp_SecureHashType")) {
+            
+//             fields.put(fieldName, fieldValue);
+//         }
+//     }
+
+//     // Bước 1: Sắp xếp theo Alphabet
+//     List<String> fieldNames = new ArrayList<>(fields.keySet());
+//     Collections.sort(fieldNames);
+
+//     // Bước 2: Nối chuỗi dữ liệu (KHÔNG ENCODE GIÁ TRỊ)
+//     StringBuilder hashData = new StringBuilder();
+//     Iterator<String> itr = fieldNames.iterator();
+//     while (itr.hasNext()) {
+//         String fieldName = itr.next();
+//         String fieldValue = fields.get(fieldName);
+        
+//         hashData.append(fieldName);
+//         hashData.append('=');
+//         // QUAN TRỌNG: Dùng trực tiếp fieldValue, KHÔNG ĐƯỢC dùng encodeValue(fieldValue)
+//         hashData.append(fieldValue); 
+
+//         if (itr.hasNext()) {
+//             hashData.append('&');
+//         }
+//     }
+
+//     // Bước 3: Tính toán Hash và so sánh (Không phân biệt hoa thường)
+//     String signValue = hmacSHA512(VnpayConfig.secretKey, hashData.toString());
+//     String vnp_SecureHash = requestParams.get("vnp_SecureHash")[0];
+    
+//     return signValue.equalsIgnoreCase(vnp_SecureHash);
+// }
+
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) throw new NullPointerException();
