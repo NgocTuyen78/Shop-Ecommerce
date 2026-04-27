@@ -10,7 +10,10 @@ import jakarta.servlet.http.HttpServletRequest;
 @Configuration
 public class VnpayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:2345/payment/vnpay/return";
+    // public static String vnp_ReturnUrl = "http://localhost:2345/payment/vnpay/return";
+    public static String vnp_ReturnUrl = System.getenv("VNPAY_RETURN_URL") != null 
+    ? System.getenv("VNPAY_RETURN_URL") 
+    : "http://localhost:2345/payment/vnpay/return";
     public static String vnp_TmnCode = "SEJJN2NR";
 	public static String vnp_Version = "2.1.0";
     public static String vnp_Command = "pay";

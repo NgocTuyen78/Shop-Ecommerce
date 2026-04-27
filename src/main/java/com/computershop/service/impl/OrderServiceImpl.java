@@ -215,4 +215,10 @@ public class OrderServiceImpl implements OrderService {
     public double getTotalSpentByUserId(Integer userId) {
         return orderRepository.getTotalSpentByUserId(userId);
     }
+
+    public boolean isAlreadyConfirmed(Integer orderId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        // Nếu trạng thái đã là "confirmed" thì trả về true
+        return order != null && "confirmed".equals(order.getStatus());
+    }
 }
