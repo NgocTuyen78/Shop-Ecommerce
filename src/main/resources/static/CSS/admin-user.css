@@ -442,3 +442,120 @@
 [data-theme="dark"] .admin-table-header h2 i {
     color: #8fd9be;
 }
+
+/* Card bao bọc chung cho từng khối */
+.action-card {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem; /* Khoảng cách khi xếp chồng */
+}
+
+.action-card h3 {
+    font-size: 1.1rem;
+    color: #1e293b;
+    margin: 0 0 1.2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.action-card h3 i { color: #3b82f6; }
+
+/* Form layout bên trong card */
+.admin-action-form {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.input-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.input-field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.input-field input, .input-field select {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+
+/* Nút Refresh */
+.admin-btn-refresh {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.admin-btn-refresh:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .action-card {
+    background: #1f3d33;
+    border-color: rgba(176, 228, 204, 0.15);
+}
+[data-theme="dark"] .action-card h3 { color: #b0e4cc; }
+
+/* Thêm thẻ select vào đây để đồng bộ màu sắc */
+[data-theme="dark"] .input-field input, 
+[data-theme="dark"] .input-field select { 
+    background: #285a48; 
+    color: #b0e4cc; 
+    border-color: rgba(176, 228, 204, 0.1);
+}
+[data-theme="dark"] .admin-btn-refresh {
+    background: #285a48;
+    color: #b0e4cc;
+    border-color: rgba(176, 228, 204, 0.2);
+}
+
+.action-card {
+    background: #ffffff;
+    padding: 1.5rem 2.5rem; /* Padding trái/phải 2.5rem để khớp với header của bảng */
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    
+    /* CHÌA KHÓA Ở ĐÂY: Khớp margin với .admin-table-container */
+    margin: 0 2rem 1.5rem 2rem; 
+    
+    /* Đảm bảo kích thước tính toán bao gồm cả padding và border */
+    box-sizing: border-box; 
+    width: calc(100% - 4rem); /* 100% trừ đi 2 bên margin (2rem + 2rem) */
+}
+
+/* Tối ưu cho Mobile để không bị vỡ khung */
+@media (max-width: 768px) {
+    .action-card {
+        margin: 0 1rem 1rem 1rem;
+        width: calc(100% - 2rem);
+        padding: 1.5rem;
+    }
+}
+

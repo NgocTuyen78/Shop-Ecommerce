@@ -90,6 +90,44 @@
           <span th:text="${error}"></span>
         </div>
 
+        <div class="admin-order-stats">
+            <div class="admin-stats-grid">
+              <div class="admin-stat-card">
+                <div class="admin-stat-icon admin-stat-primary">
+                  <i class="fas fa-box"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3 th:text="${#lists.size(order.orderDetails)}">0</h3>
+                  <p>Product Types</p>
+                </div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-icon admin-stat-info">
+                  <i class="fas fa-shopping-basket"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    th:text="${#aggregates.sum(order.orderDetails.![quantity])}"
+                  >
+                    0
+                  </h3>
+                  <p>Total Quantity</p>
+                </div>
+              </div>
+              <div class="admin-stat-card">
+                <div class="admin-stat-icon admin-stat-success">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  ></h3>
+                  <p>Total Value</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         <div class="admin-order-container">
           <div class="admin-order-header">
             <div class="admin-order-info">
@@ -299,43 +337,6 @@
             </div>
           </div>
 
-          <div class="admin-order-stats">
-            <div class="admin-stats-grid">
-              <div class="admin-stat-card">
-                <div class="admin-stat-icon admin-stat-primary">
-                  <i class="fas fa-box"></i>
-                </div>
-                <div class="admin-stat-content">
-                  <h3 th:text="${#lists.size(order.orderDetails)}">0</h3>
-                  <p>Product Types</p>
-                </div>
-              </div>
-              <div class="admin-stat-card">
-                <div class="admin-stat-icon admin-stat-info">
-                  <i class="fas fa-shopping-basket"></i>
-                </div>
-                <div class="admin-stat-content">
-                  <h3
-                    th:text="${#aggregates.sum(order.orderDetails.![quantity])}"
-                  >
-                    0
-                  </h3>
-                  <p>Total Quantity</p>
-                </div>
-              </div>
-              <div class="admin-stat-card">
-                <div class="admin-stat-icon admin-stat-success">
-                  <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="admin-stat-content">
-                  <h3
-                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
-                  ></h3>
-                  <p>Total Value</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </main>
     </div>

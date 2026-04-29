@@ -76,3 +76,5 @@ INSERT INTO products (product_name, description, price, stock_quantity, category
 ('Kingston NV2 500GB SSD', 'Budget NVMe SSD, good performance for office use', 11000.00, 52, 5, 8),
 ('G.Skill Ripjaws V 32GB RAM', 'DDR4 3600MHz RAM, 2x16GB kit, high performance', 12000.00, 15, 5, 9),
 ('Logitech G502 HERO Gaming Mouse', 'Wired gaming mouse, HERO 25K sensor, 11 programmable buttons', 15000.00, 35, 2, 3);
+
+--2, 9, 10

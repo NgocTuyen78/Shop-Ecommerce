@@ -19,6 +19,9 @@ import java.util.Optional;
  */
 @Service
 public class UserServiceImpl implements UserService {
+    public RoleServiceImpl getRoleService() {
+        return roleService;
+    }
 
     @Autowired
     private UserRepository userRepository;

@@ -82,6 +82,85 @@
           <span th:text="${error}"></span>
         </div>
 
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-primary">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${#lists.size(orders)}">0</h3>
+              <p>Total Orders</p>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-warning">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${pendingCount}">0</h3>
+              <p>Pending</p>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-info">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${shippingCount}">0</h3>
+              <p>Shipping</p>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="admin-stat-content">
+              <h3 th:text="${completedCount}">0</h3>
+              <p>Completed</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-revenue-summary">
+          <div class="admin-form-container">
+            <div class="admin-form-header">
+              <h2><i class="fas fa-chart-line"></i> Revenue Overview</h2>
+            </div>
+            <div class="admin-stats-grid">
+              <div class="admin-stat-card admin-stat-large">
+                <div class="admin-stat-icon admin-stat-success">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    class="money-display money-large money-highlight"
+                    th:text="${#numbers.formatDecimal(#aggregates.sum(orders.![totalAmount]), 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                  >
+                    0 VND
+                  </h3>
+                  <p>Total Revenue</p>
+                </div>
+              </div>
+              <div class="admin-stat-card admin-stat-large">
+                <div class="admin-stat-icon admin-stat-primary">
+                  <i class="fas fa-calculator"></i>
+                </div>
+                <div class="admin-stat-content">
+                  <h3
+                    class="money-display money-large"
+                    th:text="${#numbers.formatDecimal(#aggregates.avg(orders.![totalAmount]), 0, 'COMMA', 0, 'POINT')} + ' VND'"
+                    th:if="${!#lists.isEmpty(orders)}"
+                  >
+                    0 VND
+                  </h3>
+                  <h3 th:if="${#lists.isEmpty(orders)}">0 VND</h3>
+                  <p>Average Value</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="admin-table-container">
           <div class="admin-table-header">
             <h2><i class="fas fa-list"></i> Order List</h2>
@@ -186,84 +265,7 @@
           </table>
         </div>
 
-        <div class="admin-stats-grid">
-          <div class="admin-stat-card">
-            <div class="admin-stat-icon admin-stat-primary">
-              <i class="fas fa-shopping-cart"></i>
-            </div>
-            <div class="admin-stat-content">
-              <h3 th:text="${#lists.size(orders)}">0</h3>
-              <p>Total Orders</p>
-            </div>
-          </div>
-          <div class="admin-stat-card">
-            <div class="admin-stat-icon admin-stat-warning">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="admin-stat-content">
-              <h3 th:text="${pendingCount}">0</h3>
-              <p>Pending</p>
-            </div>
-          </div>
-          <div class="admin-stat-card">
-            <div class="admin-stat-icon admin-stat-info">
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="admin-stat-content">
-              <h3 th:text="${shippingCount}">0</h3>
-              <p>Shipping</p>
-            </div>
-          </div>
-          <div class="admin-stat-card">
-            <div class="admin-stat-icon admin-stat-success">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="admin-stat-content">
-              <h3 th:text="${completedCount}">0</h3>
-              <p>Completed</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-revenue-summary">
-          <div class="admin-form-container">
-            <div class="admin-form-header">
-              <h2><i class="fas fa-chart-line"></i> Revenue Overview</h2>
-            </div>
-            <div class="admin-stats-grid">
-              <div class="admin-stat-card admin-stat-large">
-                <div class="admin-stat-icon admin-stat-success">
-                  <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="admin-stat-content">
-                  <h3
-                    class="money-display money-large money-highlight"
-                    th:text="${#numbers.formatDecimal(#aggregates.sum(orders.![totalAmount]), 0, 'COMMA', 0, 'POINT')} + ' VND'"
-                  >
-                    0 VND
-                  </h3>
-                  <p>Total Revenue</p>
-                </div>
-              </div>
-              <div class="admin-stat-card admin-stat-large">
-                <div class="admin-stat-icon admin-stat-primary">
-                  <i class="fas fa-calculator"></i>
-                </div>
-                <div class="admin-stat-content">
-                  <h3
-                    class="money-display money-large"
-                    th:text="${#numbers.formatDecimal(#aggregates.avg(orders.![totalAmount]), 0, 'COMMA', 0, 'POINT')} + ' VND'"
-                    th:if="${!#lists.isEmpty(orders)}"
-                  >
-                    0 VND
-                  </h3>
-                  <h3 th:if="${#lists.isEmpty(orders)}">0 VND</h3>
-                  <p>Average Value</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </main>
     </div>
 

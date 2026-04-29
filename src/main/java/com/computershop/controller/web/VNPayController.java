@@ -144,14 +144,6 @@ public class VNPayController {
                 return response;
             }
 
-            // 3. Kiểm tra trạng thái đơn hàng trong DB (Tránh update đè nếu đã PAID)
-            // Giả sử bạn có hàm checkStatus trong orderService
-            // if (orderService.isAlreadyConfirmed(originalOrderId)) {
-            //     response.put("RspCode", "02");
-            //     response.put("Message", "Order already confirmed");
-            //     return response;
-            // }
-
             // 4. Xử lý kết quả
             if ("00".equals(vnp_ResponseCode)) {
                 // Thanh toán thành công -> Cập nhật DB

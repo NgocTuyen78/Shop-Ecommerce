@@ -135,12 +135,21 @@
                             </td>
                             <td>
                                 <div class="product-info-with-avatar">
-                                    <div class="product-avatar" 
+                                    <!-- <div class="product-avatar" 
                                          style="background: linear-gradient(135deg, #3b82f6, #06b6d4); 
                                                 display: flex; align-items: center; justify-content: center; 
                                                 color: white; font-weight: bold; font-size: 1.2rem;">
-                                        🖥️
-                                    </div>
+                                        🖥️ -->
+                                        <div class="product-avatar"   
+                                           style="width: 50px; height: 50px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f3f4f6;">
+                                            <img
+                                                th:src="${product.image != null ? product.image.imageUrl : '/Images/placeholder.svg'}"
+                                                th:alt="${product.productName}"
+                                                src="/Images/placeholder.svg"
+                                                onerror="this.src = '/Images/placeholder.svg'"
+                                                style="width: 100%; height: 100%; object-fit: cover;"
+                                            />
+                                        </div>  
                                     <div class="product-details">
                                         <div class="product-info">
                                             <strong th:text="${product.productName}"></strong>
@@ -172,7 +181,7 @@
                                     </a>
                                     
                                     
-                                    <form th:action="@{/admin/products/{id}/delete(id=${product.productId})}" 
+                                    <!-- <form th:action="@{/admin/products/{id}/delete(id=${product.productId})}" 
                                           method="post" 
                                           style="display: inline-block;">
                                         <button type="submit" 
@@ -180,7 +189,7 @@
                                                 onclick="return confirm('Are you sure you want to delete this product? This action cannot be undone.')">
                                             <i class="fas fa-trash"></i> <span>Delete</span>
                                         </button>
-                                    </form>
+                                    </form> -->
                                 </div>
                             </td>
                         </tr>

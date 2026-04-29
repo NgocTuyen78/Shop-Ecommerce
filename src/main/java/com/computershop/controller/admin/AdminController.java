@@ -122,19 +122,86 @@ public class AdminController {
 
         try {
             List<User> users = userService.getAllUsers();
-
             long adminCount = users.stream()
                 .filter(u -> u.getRole() != null && "admin".equalsIgnoreCase(u.getRole().getRoleName()))
                 .count();
             long customerCount = users.stream()
                 .filter(u -> u.getRole() != null && "customer".equalsIgnoreCase(u.getRole().getRoleName()))
                 .count();
-
             model.addAttribute("users", users);
             model.addAttribute("adminCount", adminCount);
             model.addAttribute("customerCount", customerCount);
             return "admin/users";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error: " + e.getMessage());
+            model.addAttribute("users", List.of());
+            return "admin/users";
+        }
+    }
 
+    /**
+     * Add a new user (admin panel)
+     */
+    @PostMapping("/users/add")
+    public String addUser(@RequestParam("username") String username,
+                         @RequestParam("password") String password,
+                         @RequestParam("role") String roleName,
+                         @RequestParam("email") String email,
+                         @RequestParam("address") String address,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+        try {
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(password);
+            user.setEmail(email);
+            user.setAddress(address);
+            if ("admin".equalsIgnoreCase(roleName)) {
+                user.setRole(userService.getRoleService().getAdminRole());
+            } else {
+                user.setRole(userService.getRoleService().getCustomerRole());
+            }
+            userService.registerUser(user);
+            redirectAttributes.addFlashAttribute("success", "User added successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Basic user search by username (admin panel)
+     */
+    @GetMapping("/users/search")
+    public String searchUsers(@RequestParam("q") String query,
+                             HttpSession session,
+                             Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+        try {
+            List<User> users;
+            if (query == null || query.trim().isEmpty()) {
+                users = userService.getAllUsers();
+            } else {
+                users = userService.getAllUsers().stream()
+                        .filter(u -> u.getUsername().toLowerCase().contains(query.trim().toLowerCase()))
+                        .toList();
+            }
+            long adminCount = users.stream()
+                .filter(u -> u.getRole() != null && "admin".equalsIgnoreCase(u.getRole().getRoleName()))
+                .count();
+            long customerCount = users.stream()
+                .filter(u -> u.getRole() != null && "customer".equalsIgnoreCase(u.getRole().getRoleName()))
+                .count();
+            model.addAttribute("users", users);
+            model.addAttribute("adminCount", adminCount);
+            model.addAttribute("customerCount", customerCount);
+            model.addAttribute("param", new Object() { public String q = query; });
+            return "admin/users";
         } catch (Exception e) {
             model.addAttribute("error", "Error: " + e.getMessage());
             model.addAttribute("users", List.of());

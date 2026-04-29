@@ -2,7 +2,6 @@
 package com.computershop.config;
 
 import java.security.SecureRandom;
-import java.util.Random;
 
 import org.springframework.context.annotation.Configuration;
 
@@ -13,7 +12,7 @@ public class VnpayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     //public static String vnp_ReturnUrl = "http://localhost:2345/payment/vnpay/return";
     public static String vnp_ReturnUrl = System.getenv("VNPAY_RETURN_URL") != null 
-    ? System.getenv("VNPAY_RETURN_URL") 
+    ? System.getenv("VNPAY_RETURN_URL")  //https://shop-ecommerce-rhry.onrender.com/payment/vnpay/return
     : "http://localhost:2345/payment/vnpay/return";
     public static String vnp_TmnCode = "0CFIB18Z";
 	public static String vnp_Version = "2.1.0";

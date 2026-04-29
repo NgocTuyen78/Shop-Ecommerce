@@ -45,107 +45,6 @@
                 <p>Manage information and status of all users</p>
             </div>
 
-            
-            <div th:if="${success}" class="admin-alert admin-alert-success">
-                <i class="fas fa-check-circle"></i>
-                <span th:text="${success}"></span>
-            </div>
-            <div th:if="${error}" class="admin-alert admin-alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <span th:text="${error}"></span>
-            </div>
-
-            
-            <div class="admin-table-container">
-                <div class="user-table-header">
-                    <h2 class="user-table-title">
-                        <i class="fas fa-users"></i> 
-                        User List
-                    </h2>
-                    <div class="user-count-badge">
-                        <i class="fas fa-user-friends"></i>
-                        Total: <strong th:text="${#lists.size(users)}">0</strong> users
-                    </div>
-                </div>
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag"></i> ID</th>
-                            <th><i class="fas fa-user"></i> Username</th>
-
-                            <th><i class="fas fa-user-tag"></i> Role</th>
-                            <th><i class="fas fa-calendar-alt"></i> Created At</th>
-                            <th><i class="fas fa-cogs"></i> Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="user : ${users}">
-                            <td>
-                                <span class="user-id-badge" th:text="${user.userId}"></span>
-                            </td>
-                            <td>
-                                <div class="user-info-cell">
-                                    <div class="user-avatar" th:text="${#strings.substring(user.username,0,1).toUpperCase()}">U</div>
-                                    <div class="user-details">
-                                        <span class="username" th:text="${user.username}"></span>
-                                        <small class="user-status">
-                                            <i th:class="${user.enabled} ? 'fas fa-circle text-success' : 'fas fa-circle text-danger'"></i>
-                                            <span th:text="${user.enabled} ? 'Active' : 'Locked'">Active</span>
-                                        </small>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td>
-                                <span class="admin-badge" 
-                                      th:classappend="${user.role.roleName == 'admin'} ? 'admin-badge-danger' : 'admin-badge-primary'"
-                                      th:text="${user.role.roleName}">
-                                </span>
-                            </td>
-                            <td>
-                                <div class="date-cell">
-                                    <i class="fas fa-calendar text-muted"></i>
-                                    <span class="date-text">Not updated</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="admin-actions">
-                                    <form th:action="@{/admin/users/{id}/toggle-status(id=${user.userId})}" 
-                                          method="post" 
-                                          style="display: inline-block;"
-                                          th:if="${user.role.roleName != 'admin'}">
-                                        <button type="submit" 
-                                                th:class="${user.enabled} ? 'admin-btn admin-btn-warning' : 'admin-btn admin-btn-success'"
-                                                th:title="${user.enabled} ? 'Lock account' : 'Unlock account'">
-                                            <i th:class="${user.enabled} ? 'fas fa-lock' : 'fas fa-lock-open'"></i>
-                                            <span th:text="${user.enabled} ? 'Lock' : 'Unlock'">Lock</span>
-                                        </button>
-                                    </form>
-                                    <div th:if="${user.role.roleName != 'admin'}" class="protected-admin" style="color: #6c757d;">
-                                        <i class="fas fa-unlock-alt"></i> Unprotected
-                                    </div>
-                                    <div th:if="${user.role.roleName == 'admin'}" class="protected-admin">
-                                        <i class="fas fa-shield-alt"></i> Protected Admin
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(users)}">
-                            <td colspan="6" class="empty-state-cell">
-                                <div class="empty-state">
-                                    <div class="empty-icon">
-                                        <i class="fas fa-users"></i>
-                                    </div>
-                                    <h3>No users found</h3>
-                                    <p>No users have been created in the system yet</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            
             <div class="admin-stats-grid">
                 <div class="admin-stat-card">
                     <div class="admin-stat-icon admin-stat-primary">
@@ -175,6 +74,190 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ADD USER -->
+            <div class="action-card add-user-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+                </div>
+                <form th:action="@{/admin/users/add}" method="post" class="admin-action-form">
+                    <div class="input-field">
+                        <label>Username</label>
+                        <input type="text" name="username" required placeholder="Enter username" />
+                    </div>
+                    <div class="input-field">
+                        <label>Email</label>
+                        <input type="email" name="email" required placeholder="email@example.com" />
+                    </div>
+                    <div class="input-field">
+                        <label>Address</label>
+                        <input type="text" name="address" required placeholder="Enter address" />
+                    </div>
+                    <div class="input-field">
+                        <label>Password</label>
+                        <input type="password" name="password" required placeholder="••••••••" />
+                    </div>
+                    <div class="input-field role-select">
+                        <label>Role</label>
+                        <select name="role">
+                            <option value="customer">Customer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="admin-btn admin-btn-primary">
+                        <i class="fas fa-plus"></i> Create
+                    </button>
+                </form>
+            </div>
+            
+            <div th:if="${success}" class="admin-alert admin-alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="admin-alert admin-alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${error}"></span>
+            </div>
+            
+            <!-- SEARCH USER -->
+            <div class="action-card search-user-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-search"></i> Search Filter</h3>
+                </div>
+                <form th:action="@{/admin/users/search}" method="get" class="admin-action-form">
+                    <div class="input-field search-input">
+                        <label>Find User</label>
+                        <input type="text" name="q" placeholder="Search by name" th:value="${param.q}" />
+                    </div>
+                    <div class="search-buttons">
+                        <!-- Nút Refresh: Quay lại trang danh sách gốc -->
+                        <a th:href="@{/admin/users}" class="admin-btn admin-btn-refresh" title="Reset Search">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="admin-table-container">
+                <div class="user-table-header">
+                    <h2 class="user-table-title">
+                        <i class="fas fa-users"></i> 
+                        User List
+                    </h2>
+                    <div class="user-count-badge">
+                        <i class="fas fa-user-friends"></i>
+                        Total: <strong th:text="${#lists.size(users)}">0</strong> users
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> ID</th>
+                            <th><i class="fas fa-user"></i> Username</th>
+
+                            <th><i class="fas fa-user-tag"></i> Role</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-map-marker-alt"></i> Address</th>
+                            <th><i class="fas fa-cogs"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td>
+                                <span class="user-id-badge" th:text="${user.userId}"></span>
+                            </td>
+                            <td>
+                                <div class="user-info-cell">
+                                    <div class="user-avatar" th:text="${#strings.substring(user.username,0,1).toUpperCase()}">U</div>
+                                    <div class="user-details">
+                                        <span class="username" th:text="${user.username}"></span>
+                                        <small class="user-status">
+                                            <i th:class="${user.enabled} ? 'fas fa-circle text-success' : 'fas fa-circle text-danger'"></i>
+                                            <span th:text="${user.enabled} ? 'Active' : 'Locked'">Active</span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="admin-badge" 
+                                      th:classappend="${user.role.roleName == 'admin'} ? 'admin-badge-danger' : 'admin-badge-primary'"
+                                      th:text="${user.role.roleName}">
+                                </span>
+                            </td>
+                            <!-- Cột Email -->
+                            <td>
+                                <div class="email-cell">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                    <span class="user-email" th:text="${user.email ?: 'N/A'}"></span>
+                                </div>
+                            </td>
+
+                            <!-- Cột Address -->
+                            <td>
+                                <div class="address-cell" >
+                                    <i class="fas fa-map-marker-alt text-muted"></i>
+                                    <!-- Lấy trực tiếp trường address từ Entity User -->
+                                    <span class="user-address" 
+                                        th:text="${user.address != null and user.address != ''} ? ${user.address} : 'No Address'">
+                                    </span>
+                                </div>
+                            </td>
+                            
+                            
+                            <td>
+                                <div class="admin-actions">
+                                    <form th:action="@{/admin/users/{id}/toggle-status(id=${user.userId})}"
+                                          method="post"
+                                          style="display: inline-block;"
+                                          th:if="${user.role.roleName != 'admin'}">
+                                        <button type="submit"
+                                                th:class="${user.enabled} ? 'admin-btn admin-btn-warning' : 'admin-btn admin-btn-success'"
+                                                th:title="${user.enabled} ? 'Lock account' : 'Unlock account'">
+                                            <i th:class="${user.enabled} ? 'fas fa-lock' : 'fas fa-lock-open'"></i>
+                                            <span th:text="${user.enabled} ? 'Lock' : 'Unlock'">Lock</span>
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Reset Password Button -->
+                                    <form th:if="${user.role != null and user.role.roleName != 'admin'}"
+                                        th:action="@{/admin/users/{id}/reset-password(id=${user.userId})}"
+                                        method="post"
+                                        style="display: inline-block; margin-left: 0.5rem;"
+                                        onsubmit="return confirm('Are you sure you want to reset the password for user?')">
+                                        
+                                        <button type="submit" class="admin-btn admin-btn-secondary" title="Reset password to default">
+                                            <i class="fas fa-key"></i> Reset Password
+                                        </button>
+                                    </form>
+
+                                    <!-- <div th:if="${user.role.roleName != 'admin'}" class="protected-admin" style="color: #6c757d;">
+                                        <i class="fas fa-unlock-alt"></i> Unprotected
+                                    </div> -->
+                                    <div th:if="${user.role.roleName == 'admin'}" class="protected-admin">
+                                        <i class="fas fa-shield-alt"></i> Protected Admin
+                                    </div>
+                                </div> 
+                            </td>
+
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="6" class="empty-state-cell">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <h3>No users found</h3>
+                                    <p>No users have been created in the system yet</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            
+            
         </main>
     </div>
 
@@ -192,6 +275,29 @@
     </script>
     <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
     <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
+
+    <!-- <script>
+    // 1. Khi trang đang tải lại (trước khi biến mất), lưu vị trí cuộn hiện tại
+    window.addEventListener('beforeunload', function() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+
+    // 2. Khi trang đã tải xong, kiểm tra xem có vị trí cũ không và cuộn đến đó
+    document.addEventListener('DOMContentLoaded', function() {
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition) {
+            // Dùng setTimeout để đảm bảo các thành phần giao diện đã render xong
+            setTimeout(() => {
+                window.scrollTo({
+                    top: parseInt(scrollPosition),
+                    behavior: 'instant' // Cuộn ngay lập tức để người dùng không thấy bị giật
+                });
+                // Xóa dữ liệu sau khi dùng để tránh ảnh hưởng lần sau nếu vào trực tiếp
+                sessionStorage.removeItem('scrollPosition');
+            }, 100);
+        }
+    });
+    </script> -->
 
 </body>
 </html>
