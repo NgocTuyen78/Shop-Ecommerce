@@ -93,4 +93,10 @@ public interface CartService {
      * @return total item count
      */
     int getCartItemCount(Integer userId);
+
+    // Lấy danh sách CartItem theo danh sách ID
+    List<CartItem> getCartItemsByIds(List<Integer> ids);
+
+    // Xóa nhiều CartItem theo danh sách ID
+    void deleteCartItems(List<Integer> ids);
 }

@@ -2,8 +2,10 @@ package com.computershop.controller.web;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -226,24 +228,33 @@ public class CartController {
     // ─── Trang Checkout (GET) ─────────────────────────────────────────────────
 
     @GetMapping("/checkout")
-    public String checkout(HttpSession session, Model model) {
+    public String checkout(@RequestParam("ids") String ids, HttpSession session, Model model) {
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) return "redirect:/login";
 
-        // Check if user is admin - admin cannot checkout
-        String role = (String) session.getAttribute("role");
+        String role = (String) session.getAttribute("role");    
         if (role != null && "admin".equalsIgnoreCase(role)) {
             model.addAttribute("error", "Admin cannot place orders.");
             return "redirect:/";
         }
 
         try {
-            List<CartItem> cartItems = cartService.getCartItemsSafe(userId);
-            double total             = cartService.getCartTotal(userId);
+            // --- BƯỚC 1: CHUYỂN CHUỖI IDS THÀNH LIST INTEGER ---
+            List<Integer> selectedIds = Arrays.stream(ids.split(","))
+                                            .map(Integer::parseInt)
+                                            .collect(Collectors.toList());
+
+            // --- BƯỚC 2: CHỈ LẤY CÁC SẢN PHẨM ĐƯỢC CHỌN ---
+            List<CartItem> cartItems = cartService.getCartItemsByIds(selectedIds);
 
             if (cartItems.isEmpty()) return "redirect:/cart/view";
 
-            // Pre-fill user's default address
+            // --- BƯỚC 3: TÍNH TỔNG TIỀN CHO RIÊNG CÁC MÓN ĐÃ CHỌN ---
+            double total = cartItems.stream()
+                                    .mapToDouble(item -> item.getProduct().getPrice().doubleValue() * item.getQuantity())
+                                    .sum();
+
+            // Điền địa chỉ mặc định (Giữ nguyên logic của bạn)
             try {
                 var userOpt = userService.getUserById(userId);
                 if (userOpt.isPresent()) {
@@ -251,15 +262,19 @@ public class CartController {
                 }
             } catch (Exception ignored) {}
 
+            // --- BƯỚC 4: GỬI IDS NGƯỢC LẠI VIEW ĐỂ DÙNG TRONG HIDDEN INPUT ---
+            model.addAttribute("selectedIds", ids); 
+            
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("cartTotal", total);
+            
             return "cart/checkout";
         } catch (Exception e) {
             model.addAttribute("error", "Could not load checkout page: " + e.getMessage());
             return "redirect:/cart/view";
         }
     }
-
+    
     // ─── Xử lý đặt hàng (POST) ───────────────────────────────────────────────
 
     @PostMapping("/checkout")
@@ -267,6 +282,7 @@ public class CartController {
             @RequestParam String shippingAddress,
             @RequestParam String paymentMethod,
             @RequestParam(required = false) String notes,
+            @RequestParam("ids") String ids, // <--- THÊM DÒNG NÀY để nhận ID sản phẩm được chọn
             HttpServletRequest request,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -282,9 +298,15 @@ public class CartController {
         }
 
         try {
-            List<CartItem> cartItems = cartService.getCartItemsSafe(userId);
+            // THAY ĐỔI: Không lấy toàn bộ giỏ, mà chỉ lấy các sản phẩm được chọn
+            List<Integer> selectedIds = Arrays.stream(ids.split(","))
+                                            .map(Integer::parseInt)
+                                            .collect(Collectors.toList());
+            
+            List<CartItem> cartItems = cartService.getCartItemsByIds(selectedIds); // <--- Cần viết hàm này trong Service
+            
             if (cartItems.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Cart is empty");
+                redirectAttributes.addFlashAttribute("error", "Vui lòng chọn sản phẩm để thanh toán");
                 return "redirect:/cart/view";
             }
 
@@ -295,6 +317,7 @@ public class CartController {
                 return "redirect:/cart/view";
             }
 
+            // 2. Tạo đơn hàng
             Order order = new Order();
             order.setUser(userOpt.get());
             order.setOrderDate(LocalDateTime.now());
@@ -302,34 +325,37 @@ public class CartController {
             order.setPaymentMethod(paymentMethod);
             if (notes != null && !notes.isBlank()) order.setNotes(notes);
             
+            // Tính tổng tiền cho các món đã chọn (tránh lấy tổng cả giỏ)
+            double totalAmount = cartItems.stream()
+                                        .mapToDouble(item -> item.getProduct().getPrice().doubleValue() * item.getQuantity())
+                                        .sum();
+            
             // Set status dựa vào phương thức thanh toán
             if ("COD".equalsIgnoreCase(paymentMethod)) {
-                order.setStatus("shipping"); // COD - đã xác nhận, đang giao hàng
+                order.setStatus("pending"); // COD - đã xác nhận, đang xử lý đơn hàng
             } else {
                 order.setStatus("pending_payment"); // Chờ thanh toán online
             }
             
             Order savedOrder = orderService.createOrder(order);
 
-            double totalAmount = 0.0;
-            // 3. Tạo OrderDetail
+            // 3. Tạo OrderDetail cho những món đã chọn
             for (CartItem item : cartItems) {
-                Product product = item.getProduct();
-                double itemPrice = product.getPrice().doubleValue();
-                totalAmount += itemPrice * item.getQuantity();
-                
                 OrderDetail detail = new OrderDetail(
                     savedOrder,
-                    product,
+                    item.getProduct(),
                     item.getQuantity(),
-                    BigDecimal.valueOf(itemPrice)
+                    item.getProduct().getPrice()
                 );
                 orderDetailService.createOrderDetail(detail);
             }
 
-            // 4. Xoá giỏ hàng
-            cartService.clearCart(userId);
-            session.setAttribute("cartCount", 0);
+            // 4. Xoá những món ĐÃ THANH TOÁN khỏi giỏ hàng (Không xóa sạch cả giỏ)
+            cartService.deleteCartItems(selectedIds); // <--- Cần viết hàm xóa theo danh sách ID
+            
+            // Cập nhật lại số lượng icon giỏ hàng trên header
+            int remainingItems = cartService.getCartItemsSafe(userId).size();
+            session.setAttribute("cartCount", remainingItems);
 
             // 5. Xử lý redirect tuỳ theo payment method
             if ("VNPAY".equals(paymentMethod)) {

@@ -64,25 +64,39 @@ public class UserController {
      */
     @PostMapping("/profile/update")
     public String updateProfile(
+            @RequestParam("username") String username,
+            @RequestParam("phone") String phone,
+            @RequestParam("address") String address,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
-            return "redirect:/login";
-        }
+        if (userId == null) return "redirect:/login";
 
         try {
             User user = userService.getUserById(userId).orElse(null);
             if (user != null) {
+                user.setUsername(username.trim());
+
+                // Hàm xử lý chuẩn hóa: Nếu là trống hoặc "N/A" thì biến thành null
+                user.setPhone(formatInput(phone));
+                user.setAddress(formatInput(address));
+
                 userService.updateUser(userId, user);
-                redirectAttributes.addFlashAttribute("success", "Profile updated successfully!");
+                redirectAttributes.addFlashAttribute("success", "Profile updated!");
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Update failed: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Update failed!");
         }
-
         return "redirect:/user/profile";
+    }
+
+    // Hàm phụ trợ để làm sạch dữ liệu đầu vào
+    private String formatInput(String input) {
+        if (input == null || input.trim().isEmpty() || input.trim().equalsIgnoreCase("N/A")) {
+            return null; // Database sẽ lưu giá trị NULL chuẩn
+        }
+        return input.trim();
     }
 
     /**

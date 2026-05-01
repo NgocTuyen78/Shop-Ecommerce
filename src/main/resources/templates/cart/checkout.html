@@ -87,7 +87,8 @@
       <div class="checkout-grid">
         <div class="checkout-form">
           <form th:action="@{/cart/checkout}" method="post">
-            
+            <!-- ĐẶT Ở ĐÂY: Lưu trữ danh sách ID sản phẩm đã chọn -->
+             <input type="hidden" name="ids" th:value="${selectedIds}" />
             <div class="form-group">
               <label for="shippingAddress">
                 <i class="fas fa-map-marker-alt"></i> Shipping Address *
@@ -138,7 +139,7 @@
                 <h3>💳 Payment via VNPay (Sandbox)</h3>
                 <div class="payment-amount">
                   Amount:
-                  <span th:text="${#numbers.formatDecimal(cartTotal, 1, 'COMMA', 0, 'POINT')}">0</span> ₫
+                  <span th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')}">0</span> đ
                 </div>
                 <p>The system will redirect you to the actual VNPay payment gateway.</p>
                 <p><em>(Use NCB bank, enter test code)</em></p>
@@ -177,7 +178,7 @@
           <div class="summary-total">
             <span>Grand Total</span>
             <strong
-              th:text="${#numbers.formatDecimal(cartTotal, 1, 'COMMA', 0, 'POINT')}"
+              th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')}"
             ></strong>
           </div>
         </div>

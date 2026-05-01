@@ -3,6 +3,7 @@ package com.computershop.controller.admin;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -144,31 +145,75 @@ public class AdminController {
      */
     @PostMapping("/users/add")
     public String addUser(@RequestParam("username") String username,
-                         @RequestParam("password") String password,
-                         @RequestParam("role") String roleName,
-                         @RequestParam("email") String email,
-                         @RequestParam("address") String address,
-                         HttpSession session,
-                         RedirectAttributes redirectAttributes) {
+                        @RequestParam("password") String password,
+                        @RequestParam("role") String roleName,
+                        @RequestParam("phone") String phone,
+                        @RequestParam("address") String address,
+                        HttpSession session,
+                        RedirectAttributes redirectAttributes) {
+        
+        // 1. Kiểm tra quyền Admin (Giữ nguyên logic của bạn)
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
+
         try {
+            // --- BẮT ĐẦU CÁC RÀNG BUỘC KIỂM TRA (VALIDATION) ---
+
+            // Kiểm tra để trống hoặc chỉ chứa khoảng trắng (.trim())
+            if (username == null || username.trim().isEmpty()) {
+                throw new Exception("Tên đăng nhập không được để trống.");
+            }
+            if (username.length() < 4) {
+                throw new Exception("Tên đăng nhập phải có ít nhất 4 ký tự.");
+            }
+
+            if (password == null || password.length() < 6) {
+                throw new Exception("Mật khẩu phải có ít nhất 6 ký tự.");
+            }
+
+            if (phone == null || !phone.matches("^(0|\\+84)(\\d{9})$")) {
+                throw new Exception("Số điện thoại không hợp lệ (phải có 10 số và bắt đầu bằng 0 hoặc +84).");
+            }
+
+            if (address == null || address.trim().length() < 10) {
+                throw new Exception("Địa chỉ quá ngắn, vui lòng nhập chi tiết hơn.");
+            }
+
+            // Kiểm tra logic nghiệp vụ: Tên đăng nhập đã tồn tại chưa?
+            // Nếu tìm thấy (isPresent == true) thì văng lỗi
+            if (userService.getUserByUsername(username).isPresent()) {
+                throw new Exception("Tên đăng nhập này đã được sử dụng.");
+            }
+
+            // --- KẾT THÚC CÁC RÀNG BUỘC ---
+
+            // Nếu vượt qua tất cả các kiểm tra trên, tiến hành tạo User
             User user = new User();
-            user.setUsername(username);
-            user.setPassword(password);
-            user.setEmail(email);
-            user.setAddress(address);
+            user.setUsername(username.trim());
+            user.setPassword(password); // Lưu ý: Nên mã hóa password trước khi lưu
+            user.setPhone(phone.trim());
+            user.setAddress(address.trim());
+
             if ("admin".equalsIgnoreCase(roleName)) {
                 user.setRole(userService.getRoleService().getAdminRole());
             } else {
                 user.setRole(userService.getRoleService().getCustomerRole());
             }
+
             userService.registerUser(user);
-            redirectAttributes.addFlashAttribute("success", "User added successfully");
+            redirectAttributes.addFlashAttribute("success", "Thêm người dùng thành công!");
+
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            // Các tên này phải khớp chính xác với biến trong th:value="${...}"
+            redirectAttributes.addFlashAttribute("oldUsername", username);
+            redirectAttributes.addFlashAttribute("oldPhone", phone);
+            redirectAttributes.addFlashAttribute("oldAddress", address);
+            redirectAttributes.addFlashAttribute("oldRole", roleName);
+            redirectAttributes.addFlashAttribute("oldPassword", password);
         }
+        
         return "redirect:/admin/users";
     }
 
@@ -374,34 +419,64 @@ public class AdminController {
      * @return products view
      */
     @GetMapping("/products")
-    public String manageProducts(HttpSession session, Model model) {
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        try {
-            List<Product> products = productService.getAllProducts();
-            List<Category> categories = categoryService.getAllCategoriesOrderedByName();
-
-            long inStockCount = products.stream().filter(p -> p.getStockQuantity() > 0).count();
-            long lowStockCount = products.stream().filter(p -> p.getStockQuantity() > 0 && p.getStockQuantity() <= 5).count();
-            long outOfStockCount = products.stream().filter(p -> p.getStockQuantity() == 0).count();
-
-            model.addAttribute("products", products);
-            model.addAttribute("categories", categories);
-            model.addAttribute("newProduct", new Product());
-            model.addAttribute("inStockCount", inStockCount);
-            model.addAttribute("lowStockCount", lowStockCount);
-            model.addAttribute("outOfStockCount", outOfStockCount);
-
-            return "admin/products";
-
-        } catch (Exception e) {
-            model.addAttribute("error", "Error: " + e.getMessage());
-            model.addAttribute("products", List.of());
-            return "admin/products";
-        }
+public String manageProducts(
+        @RequestParam(name = "keyword", required = false) String keyword, 
+        HttpSession session, 
+        Model model) {
+    
+    // 1. Kiểm tra quyền Admin
+    if (!isAdmin(session)) {
+        return "redirect:/login";
     }
+
+    try {
+        List<Product> products;
+        
+        // 2. Xử lý logic tìm kiếm
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // Tìm kiếm sản phẩm theo tên (sử dụng hàm ContainingIgnoreCase trong Service/Repository)
+            products = productService.searchProductsByName(keyword);
+            model.addAttribute("keyword", keyword); 
+        } else {
+            // Nếu không có từ khóa, lấy toàn bộ danh sách
+            products = productService.getAllProducts();
+        }
+
+        // 3. Lấy danh sách Category để đổ vào các dropdown (nếu có)
+        List<Category> categories = categoryService.getAllCategoriesOrderedByName();
+
+        // 4. Tính toán thống kê ĐỒNG BỘ với ngưỡng hiển thị trong HTML (Mốc 20)
+        // Tổng sản phẩm đang có sẵn (Số lượng > 20)
+        long inStockCount = products.stream()
+                .filter(p -> p.getStockQuantity() > 20)
+                .count();
+                
+        // Sản phẩm sắp hết hàng (Số lượng từ 1 đến 20)
+        long lowStockCount = products.stream()
+                .filter(p -> p.getStockQuantity() > 0 && p.getStockQuantity() <= 20)
+                .count();
+                
+        // Sản phẩm đã hết hàng (Số lượng <= 0)
+        long outOfStockCount = products.stream()
+                .filter(p -> p.getStockQuantity() <= 0)
+                .count();
+
+        // 5. Gửi dữ liệu sang View
+        model.addAttribute("products", products);
+        model.addAttribute("categories", categories);
+        model.addAttribute("newProduct", new Product()); // Dùng cho form thêm mới nếu cần
+        model.addAttribute("inStockCount", inStockCount);
+        model.addAttribute("lowStockCount", lowStockCount);
+        model.addAttribute("outOfStockCount", outOfStockCount);
+
+        return "admin/products";
+
+    } catch (Exception e) {
+        model.addAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+        model.addAttribute("products", List.of());
+        return "admin/products";
+    }
+}
 
     /**
      * Displays the add product page.
@@ -588,16 +663,36 @@ public class AdminController {
      * @return orders view
      */
     @GetMapping("/orders")
-    public String manageOrders(HttpSession session, Model model) {
+    public String manageOrders(
+            @RequestParam(required = false) Integer orderId,
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String status,
+            HttpSession session, 
+            Model model) {
+        
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
 
         try {
+            // 1. Lấy tất cả đơn hàng từ database
             List<Order> orders = orderService.getAllOrders();
 
+            // 2. Thực hiện lọc danh sách dựa trên tham số (nếu có)
+            List<Order> filteredOrders = orders.stream()
+                .filter(o -> (orderId == null || o.getOrderId().equals(orderId)))
+                .filter(o -> (status == null || status.isEmpty() || o.getStatus().equalsIgnoreCase(status)))
+                .filter(o -> (customerName == null || customerName.isEmpty() || 
+                            (o.getUser() != null && o.getUser().getUsername().toLowerCase().contains(customerName.toLowerCase()))))
+                .collect(Collectors.toList());
+
+            // 3. Tính toán thống kê (Tính trên danh sách gốc orders hoặc filteredOrders tùy bạn)
+            // Thường thống kê nên tính trên tổng số đơn hàng gốc để dashboard không bị nhảy số khi lọc
             long pendingCount = orders.stream()
                 .filter(o -> o.getStatus() == null || "pending".equalsIgnoreCase(o.getStatus()))
+                .count();
+            long pendingPaymentCount = orders.stream()
+                .filter(o -> "pending_payment".equals(o.getStatus()))
                 .count();
             long shippingCount = orders.stream()
                 .filter(o -> "shipping".equalsIgnoreCase(o.getStatus()))
@@ -605,11 +700,22 @@ public class AdminController {
             long completedCount = orders.stream()
                 .filter(o -> "completed".equalsIgnoreCase(o.getStatus()))
                 .count();
+            long confirmedCount = orders.stream()
+                .filter(o -> "confirmed".equalsIgnoreCase(o.getStatus()))   
+                .count();
+            long cancelledCount = orders.stream()
+                .filter(o -> "cancelled".equalsIgnoreCase(o.getStatus()))
+                .count();
 
-            model.addAttribute("orders", orders);
+            // 4. Gửi dữ liệu đã lọc sang View
+            model.addAttribute("orders", filteredOrders); 
             model.addAttribute("pendingCount", pendingCount);
+            model.addAttribute("pendingPaymentCount", pendingPaymentCount);
             model.addAttribute("shippingCount", shippingCount);
             model.addAttribute("completedCount", completedCount);
+            model.addAttribute("confirmedCount", confirmedCount);
+            model.addAttribute("cancelledCount", cancelledCount);
+            
             return "admin/orders";
 
         } catch (Exception e) {

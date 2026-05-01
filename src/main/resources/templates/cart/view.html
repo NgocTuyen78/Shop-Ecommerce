@@ -26,6 +26,10 @@
         <table class="cart-table">
           <thead>
             <tr>
+              <!-- Checkbox chọn tất cả -->
+              <th>
+                <input type="checkbox" id="select-all"/>
+              </th>
               <th>Product</th>
               <th>Unit Price</th>
               <th>Quantity</th>
@@ -35,6 +39,11 @@
           </thead>
           <tbody>
             <tr th:each="item : ${cartItems}">
+              <!-- Checkbox từng sản phẩm -->
+              <td>
+                <input type="checkbox" class="cart-item-checkbox" 
+                      th:attr="data-cart-item-id=${item.cartItemId}"/>
+              </td>
               <td class="product-col">
                 <img
                   th:src="${item.product.image != null ? item.product.image.imageUrl : '/Images/placeholder.svg'}"
@@ -82,10 +91,9 @@
         <div class="cart-summary">
           <div class="summary-row">
             <span>Total:</span>
-            <span
-              class="total"
-              th:text="${#numbers.formatDecimal(cartTotal,1,'COMMA',2,'POINT')}"
-            ></span>
+            <span class="total" style="font-weight: bold; color: #28a745; font-size: 1.2rem;">
+                (Tổng sản phẩm: 0) 0 ₫
+            </span>
           </div>
           <div class="actions">
             <a class="btn" th:href="@{/}">Continue Shopping</a>
@@ -107,30 +115,97 @@
     <script th:src="@{/JavaScript/header.js}"></script>
     <script th:src="@{/JavaScript/main.js}"></script>
     <script>
-      // Simple AJAX handlers for update/remove
-      document.addEventListener("click", function (e) {
+
+      // Chọn sản phẩm để thanh toán
+      document.addEventListener("DOMContentLoaded", function () {
+    const selectAll = document.getElementById("select-all");
+    const itemCheckboxes = document.querySelectorAll(".cart-item-checkbox");
+    const checkoutBtn = document.querySelector('.btn.primary');
+
+    // 1. Xử lý sự kiện Thay đổi (Chọn checkbox)
+    document.addEventListener("change", function (e) {
+        if (e.target.id === "select-all") {
+            itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
+            updateSelectedCount();
+        }
+
+        if (e.target.matches(".cart-item-checkbox")) {
+            selectAll.checked = Array.from(itemCheckboxes).every(cb => cb.checked);
+            updateSelectedCount();
+        }
+    });
+
+    // 2. Hàm tính lại tổng tiền dựa trên những mục được tích
+    function updateSelectedCount() {
+        // 1. Lấy tất cả các checkbox đang được tích
+        const selectedCheckboxes = document.querySelectorAll(".cart-item-checkbox:checked");
+        const count = selectedCheckboxes.length;
+        
+        // 2. Tính toán tổng tiền
+        let selectedTotal = 0;
+        selectedCheckboxes.forEach(cb => {
+            const row = cb.closest("tr");
+            // Lấy text ở cột Amount (cột 5), loại bỏ các ký tự không phải số
+            const amountText = row.querySelector("td:nth-child(5)").textContent;
+            const amount = parseInt(amountText.replace(/\D/g, ""));
+            selectedTotal += amount;
+        });
+
+        // 3. Định dạng số tiền (ví dụ: 30.000)
+        const formattedTotal = selectedTotal.toLocaleString('vi-VN');
+
+        // 4. Cập nhật hiển thị gộp chung vào 1 câu
+        const totalDisplay = document.querySelector(".cart-summary .total");
+        if (totalDisplay) {
+            totalDisplay.textContent = `(Tổng sản phẩm: ${count}) ${formattedTotal} ₫`;
+        }
+    }
+
+    // 3. Xử lý nút Checkout (Chỉ thanh toán thứ đã chọn)
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', function (e) {
+            // NGĂN CHẶN chuyển hướng mặc định ngay lập tức
+            e.preventDefault(); 
+
+            const selectedCheckboxes = document.querySelectorAll(".cart-item-checkbox:checked");
+            const selectedIds = Array.from(selectedCheckboxes)
+                                    .map(cb => cb.getAttribute("data-cart-item-id"));
+
+            if (selectedIds.length === 0) {
+                alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
+            } else {
+                // Tạo URL mới với các ID đã chọn
+                const checkoutUrl = "/cart/checkout?ids=" + selectedIds.join(",");
+                
+                // Thực hiện chuyển hướng bằng tay
+                window.location.href = checkoutUrl;
+            }
+        });
+    }
+
+    // 4. AJAX cho nút Update/Remove (giữ nguyên logic cũ của bạn)
+    document.addEventListener("click", function (e) {
         if (e.target.matches(".update-btn")) {
-          const id = e.target.getAttribute("data-cart-item-id");
-          const input = document.querySelector(
-            '.qty-input[data-cart-item-id="' + id + '"]',
-          );
-          const qty = parseInt(input.value || "0");
-          fetch("/cart/update", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ cartItemId: id, quantity: qty }),
-          }).then(() => location.reload());
+            const id = e.target.getAttribute("data-cart-item-id");
+            const input = document.querySelector('.qty-input[data-cart-item-id="' + id + '"]');
+            const qty = parseInt(input.value || "0");
+            fetch("/cart/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ cartItemId: id, quantity: qty }),
+            }).then(() => location.reload());
         }
 
         if (e.target.matches(".remove-btn")) {
-          const id = e.target.getAttribute("data-cart-item-id");
-          fetch("/cart/remove", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ cartItemId: id }),
-          }).then(() => location.reload());
+            const id = e.target.getAttribute("data-cart-item-id");
+            fetch("/cart/remove", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ cartItemId: id }),
+            }).then(() => location.reload());
         }
-      });
+    });
+});
     </script>
   </body>
 </html>

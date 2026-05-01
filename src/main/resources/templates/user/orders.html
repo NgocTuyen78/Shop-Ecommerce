@@ -205,6 +205,33 @@
           font-size: 0.75rem;
         }
       }
+
+      .order-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #eee;
+    }
+    .tab-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: 600;
+        color: #666;
+        white-space: nowrap;
+        transition: all 0.3s;
+        border-bottom: 3px solid transparent;
+    }
+    .tab-btn.active {
+        color: #3b82f6;
+        border-bottom-color: #3b82f6;
+    }
+    .tab-btn:hover {
+        color: #3b82f6;
+    }
     </style>
   </head>
   <body>
@@ -233,8 +260,18 @@
         >
       </div>
 
+      <!-- Phân theo trạng thái đơn hàng -->
+      <div class="order-tabs">
+        <button class="tab-btn active" data-status="all">All</button>
+        <button class="tab-btn" data-status="pending">Pending</button>
+        <button class="tab-btn" data-status="pending_payment">Pending Payment</button>
+        <button class="tab-btn" data-status="confirmed">Confirmed</button>
+        <button class="tab-btn" data-status="completed">Completed</button>
+        <button class="tab-btn" data-status="cancelled">Cancelled</button>
+      </div>
+
       <div th:if="${!#lists.isEmpty(orders)}" class="orders-list">
-        <div th:each="order : ${orders}" class="order-card">
+        <div th:each="order : ${orders}" class="order-card" th:data-status="${order.status}">
           <div class="order-card-header">
             <div>
               <div class="order-id">
@@ -254,7 +291,7 @@
               <span
                 class="order-status"
                 th:classappend="${order.status == 'pending'} ? 'status-pending' : (${order.status == 'pending_payment'} ? 'status-pending_payment' : (${order.status == 'confirmed'} ? 'status-confirmed' : (${order.status == 'shipping'} ? 'status-shipping' : (${order.status == 'completed'} ? 'status-completed' : 'status-cancelled'))))"
-                th:text="${order.status == 'pending'} ? 'Processing' : (${order.status == 'pending_payment'} ? 'Pending Payment' : (${order.status == 'confirmed'} ? 'Confirmed' : (${order.status == 'shipping'} ? 'Shipping' : (${order.status == 'completed'} ? 'Completed' : (${order.status == 'cancelled'} ? 'Cancelled' : order.status)))))"
+                th:text="${order.status == 'pending'} ? 'Pending' : (${order.status == 'pending_payment'} ? 'Pending Payment' : (${order.status == 'confirmed'} ? 'Confirmed' : (${order.status == 'shipping'} ? 'Shipping' : (${order.status == 'completed'} ? 'Completed' : (${order.status == 'cancelled'} ? 'Cancelled' : order.status)))))"
               >
               </span>
             </div>
@@ -297,6 +334,31 @@
     </div>
 
     <div th:replace="~{footer :: footer}"></div>
+    <!-- Đặt đoạn lọc đơn hàng ở đây -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const orderCards = document.querySelectorAll('.order-card');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const status = tab.getAttribute('data-status');
+
+                    orderCards.forEach(card => {
+                        const cardStatus = card.getAttribute('data-status');
+                        if (status === 'all' || cardStatus === status) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
     <script th:src="@{/JavaScript/header.js}"></script>
   </body>
 </html>

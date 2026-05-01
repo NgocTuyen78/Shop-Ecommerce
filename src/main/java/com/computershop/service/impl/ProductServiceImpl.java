@@ -180,4 +180,13 @@ public class ProductServiceImpl implements ProductService {
         Pageable pageable = PageRequest.of(0, limit);
         return productRepository.findLowStockProducts(pageable);
     }
+
+    
+    public List<Product> searchProductsByName(String keyword) {
+        if (keyword != null && !keyword.isEmpty()) {
+            return productRepository.findByProductNameContainingIgnoreCase(keyword);
+        }
+        return productRepository.findAll(); // Nếu không có từ khóa, trả về tất cả
+    }
+    
 }

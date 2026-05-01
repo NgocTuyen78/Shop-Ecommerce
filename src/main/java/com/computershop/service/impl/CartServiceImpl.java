@@ -231,4 +231,26 @@ public class CartServiceImpl implements CartService {
         }
         return cartOpt.get().getCartItems();
     }
+
+    @Override
+    public List<CartItem> getCartItemsByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // findAllById sẽ trả về tất cả các bản ghi có ID nằm trong danh sách ids
+        return cartItemRepository.findAllById(ids);
+    }
+
+    /**
+     * Xóa các mục trong giỏ hàng sau khi đã đặt hàng thành công.
+     * Lưu ý: Chỉ xóa những món đã mua (ids), giữ lại những món khác trong giỏ.
+     */
+    @Override
+    @Transactional // Quan trọng: Đảm bảo việc xóa được thực thi trong một Transaction
+    public void deleteCartItems(List<Integer> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            // deleteAllByIdInBatch giúp xóa nhanh nhiều bản ghi bằng 1 câu lệnh SQL duy nhất
+            cartItemRepository.deleteAllByIdInBatch(ids);
+        }
+    }
 }

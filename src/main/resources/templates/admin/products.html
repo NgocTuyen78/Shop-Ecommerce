@@ -105,7 +105,34 @@
                 </button>
             </div>
 
-            
+           <div class="action-card product-filter">
+                <h3><i class="fas fa-search"></i> Search Products</h3>
+                <div class="product-table-actions">
+                    <form th:action="@{/admin/products}" method="get" class="product-action-form product-search-form">
+                        
+                        <!-- Ô nhập liệu tìm kiếm -->
+                        <div class="product-input-field">
+                            <label>Product Name</label>
+                            <div class="product-search-wrapper">
+                                <i class="fas fa-search"></i>
+                                <input type="text" name="keyword" th:value="${keyword}" 
+                                    placeholder="Search products by name...">
+                            </div>
+                        </div>
+
+                        <!-- Nhóm nút bấm -->
+                        <div class="product-form-buttons">
+                            <!-- <button type="submit" class="product-btn-submit">
+                                <i class="fas fa-filter"></i> Search
+                            </button> -->
+                            <a th:href="@{/admin/products}" class="product-btn-reset">
+                                <i class="fas fa-undo"></i> Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="admin-table-container">
                 <div class="admin-table-header">
                     <h2><i class="fas fa-list"></i> Product List</h2>

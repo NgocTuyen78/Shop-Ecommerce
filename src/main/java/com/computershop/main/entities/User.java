@@ -29,8 +29,8 @@ public class User {
     @Column(name = "address", length = 500)
     private String address;
     
-    @Column(name = "email", length = 255)
-    private String email;
+    @Column(name = "phone", length = 255)
+    private String phone;
 
     @Transient
     private String password;
@@ -51,7 +51,7 @@ public class User {
     public String getPassword() {return password;}
     public boolean isEnabled() {return enabled;}
     public String getAddress() {return address;}
-    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
 
     public void setUserId(Integer userId) {this.userId = userId;}
     public void setUsername(String username) {this.username = username;}
@@ -60,8 +60,8 @@ public class User {
     public void setPassword(String password) {this.password = password;}
     public void setEnabled(boolean enabled) {this.enabled = enabled;}
     public void setAddress(String address) {this.address = address;}
-    public void setEmail(String email) { this.email = email; }
-    
+    public void setPhone(String phone) { this.phone = phone; }
+
     @Override
     public String toString() {
         return "User{" +

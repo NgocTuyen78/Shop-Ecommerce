@@ -74,6 +74,8 @@ public class UserServiceImpl implements UserService {
 
 
         user.setUsername(userDetails.getUsername());
+        user.setPhone(userDetails.getPhone());     // Thêm dòng này
+        user.setAddress(userDetails.getAddress());
 
         if (userDetails.getRole() != null) {
             user.setRole(userDetails.getRole());

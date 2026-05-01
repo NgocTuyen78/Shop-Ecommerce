@@ -529,3 +529,140 @@
 [data-theme="dark"] .admin-form-header h2 i {
     color: #8fd9be;
 }
+
+/* Container chung cho khối lọc sản phẩm */
+.action-card.product-filter {
+    background: #ffffff;
+    padding: 1.5rem 2.5rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin: 0 2rem 1.5rem 2rem;
+    width: calc(100% - 4rem);
+    box-sizing: border-box;
+}
+
+/* Layout Form */
+.product-action-form {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end; /* Căn nút bấm bằng đáy với input */
+    flex-wrap: wrap;
+}
+
+.product-input-field {
+    flex: 1;
+    min-width: 250px;
+}
+
+.product-input-field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+/* Wrapper cho ô input có icon */
+.product-search-wrapper {
+    position: relative;
+}
+
+.product-search-wrapper i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.product-search-wrapper input {
+    width: 100%;
+    padding: 0.7rem 1rem 0.7rem 2.8rem; /* Đẩy chữ qua phải nhường chỗ cho icon */
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.product-search-wrapper input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: #ffffff;
+}
+
+/* Định dạng nút bấm */
+.product-form-buttons {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.product-btn-submit {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    height: 42px; /* Khớp chiều cao với input */
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.product-btn-submit:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.product-btn-reset {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 0 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    height: 42px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.product-btn-reset:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+/* --- Dark Mode Support cho Product Filter --- */
+[data-theme="dark"] .action-card.product-filter {
+    background: #1f3d33;
+    border-color: rgba(176, 228, 204, 0.15);
+}
+
+[data-theme="dark"] .product-input-field label {
+    color: #7aad95;
+}
+
+[data-theme="dark"] .product-search-wrapper input {
+    background: #285a48;
+    color: #b0e4cc;
+    border-color: rgba(176, 228, 204, 0.1);
+}
+
+[data-theme="dark"] .product-btn-reset {
+    background: #285a48;
+    color: #b0e4cc;
+    border-color: rgba(176, 228, 204, 0.2);
+}
+
+[data-theme="dark"] .product-btn-submit {
+    background: #34d399;
+    color: #064e3b;
+}

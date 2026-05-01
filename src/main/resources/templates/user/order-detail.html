@@ -298,7 +298,7 @@
                                  (order.status == 'shipping' ? 'status-shipping' :
                                  (order.status == 'completed' ? 'status-completed' :
                                  'status-cancelled'))))}"
-                th:text="${order.status == 'pending' ? 'Processing' :
+                th:text="${order.status == 'pending' ? 'Pending' :
                           (order.status == 'pending_payment' ? 'Pending Payment' :
                           (order.status == 'confirmed' ? 'Confirmed' :
                           (order.status == 'shipping' ? 'Shipping' :
@@ -322,6 +322,10 @@
                 th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
               ></span>
             </div>
+            <div class="info-item">
+              <label>Notes:</label>
+              <span th:text="${(order.notes != null && !#strings.isEmpty(order.notes)) ? order.notes : 'No notes'}"></span>
+          </div>
           </div>
         </div>
 

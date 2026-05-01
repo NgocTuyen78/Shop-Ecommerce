@@ -229,6 +229,17 @@
                     th:text="${order.user?.role?.roleName ?: 'N/A'}"
                   ></span>
                 </div>
+                <!-- Số điện thoại (Mới) -->
+                <div class="admin-info-item">
+                    <label>Phone Number:</label>
+                    <span th:text="${order.user?.phone ?: 'N/A'}"></span>
+                </div>
+
+                <!-- Địa chỉ giao hàng (Mới) -->
+                <div class="admin-info-item">
+                    <label>Address:</label>
+                    <span th:text="${order.user?.address ?: 'N/A'}"></span>
+                </div>
               </div>
             </div>
 
@@ -246,6 +257,11 @@
                     th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
                   ></span>
                   <span th:if="${order.orderDate == null}">Not updated</span>
+                </div>
+                <!-- Địa chỉ giao hàng (Mới thêm vào) -->
+                <div class="admin-info-item">
+                    <label>Shipping Address:</label>
+                    <span th:text="${order.shippingAddress ?: 'Not updated'}"></span>
                 </div>
                 <div class="admin-info-item">
                   <label>Status:</label>
@@ -271,6 +287,11 @@
                     class="text-success money-display money-large money-highlight"
                     th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"
                   ></strong>
+                </div>
+                <!-- Ghi chú - Notes -->
+                <div class="admin-info-item">
+                    <label>Notes:</label>
+                    <span th:text="${(order.notes != null && !#strings.isEmpty(order.notes)) ? order.notes : 'No notes'}"></span>
                 </div>
               </div>
             </div>
