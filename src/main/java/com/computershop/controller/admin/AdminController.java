@@ -286,19 +286,28 @@ public class AdminController {
      */
     @PostMapping("/users/{id}/reset-password")
     public String resetUserPassword(@PathVariable("id") Integer userId,
-                                   HttpSession session,
-                                   RedirectAttributes redirectAttributes) {
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes) {
         if (!isAdmin(session)) {
             return "redirect:/login";
         }
-
         try {
-            userService.resetUserPassword(userId, "123456");
-            redirectAttributes.addFlashAttribute("success", "User password successfully reset to '123456'");
+            var userOpt = userService.getUserById(userId);
+            
+            if (userOpt.isPresent()) {
+                String username = userOpt.get().getUsername();
+        
+                userService.resetUserPassword(userId, "123456");
+                
+                redirectAttributes.addFlashAttribute("success", 
+                    "Password for user '" + username + "' has been successfully reset to '123456'");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "User not found.");
+            }
+            
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
         }
-
         return "redirect:/admin/users";
     }
 

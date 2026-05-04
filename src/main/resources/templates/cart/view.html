@@ -92,7 +92,7 @@
           <div class="summary-row">
             <span>Total:</span>
             <span class="total" style="font-weight: bold; color: #28a745; font-size: 1.2rem;">
-                (Tổng sản phẩm: 0) 0 ₫
+                (Total Items: 0) 0 ₫
             </span>
           </div>
           <div class="actions">
@@ -139,25 +139,34 @@
     function updateSelectedCount() {
         // 1. Lấy tất cả các checkbox đang được tích
         const selectedCheckboxes = document.querySelectorAll(".cart-item-checkbox:checked");
-        const count = selectedCheckboxes.length;
         
-        // 2. Tính toán tổng tiền
-        let selectedTotal = 0;
+        let totalItemsCount = 0; 
+        let selectedTotal = 0;  
+
+        // 2. Duyệt qua từng dòng được chọn
         selectedCheckboxes.forEach(cb => {
             const row = cb.closest("tr");
-            // Lấy text ở cột Amount (cột 5), loại bỏ các ký tự không phải số
+
+            // --- LẤY SỐ LƯỢNG (Cột 4) ---
+            // Lấy text ở cột Quantity, loại bỏ ký tự không phải số và cộng dồn
+            const qtyInput = row.querySelector("td:nth-child(4) .qty-input");
+            const qty = parseInt(qtyInput.value) || 0; 
+            totalItemsCount += qty;
+
+            // --- LẤY THÀNH TIỀN (Cột 5) ---
             const amountText = row.querySelector("td:nth-child(5)").textContent;
-            const amount = parseInt(amountText.replace(/\D/g, ""));
+            const amount = parseInt(amountText.replace(/\D/g, "")) || 0;
             selectedTotal += amount;
         });
 
         // 3. Định dạng số tiền (ví dụ: 30.000)
         const formattedTotal = selectedTotal.toLocaleString('vi-VN');
 
-        // 4. Cập nhật hiển thị gộp chung vào 1 câu
+        // 4. Cập nhật hiển thị (Sử dụng tiếng Anh như bạn đã yêu cầu trước đó)
         const totalDisplay = document.querySelector(".cart-summary .total");
         if (totalDisplay) {
-            totalDisplay.textContent = `(Tổng sản phẩm: ${count}) ${formattedTotal} ₫`;
+            // Hiển thị: (Total Items: 5) 150.000 ₫
+            totalDisplay.textContent = `(Total Items: ${totalItemsCount}) ${formattedTotal} ₫`;
         }
     }
 
@@ -172,12 +181,11 @@
                                     .map(cb => cb.getAttribute("data-cart-item-id"));
 
             if (selectedIds.length === 0) {
-                alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
+                // Thay thế alert bằng showToast với type "error"
+                window.showToast("Please select at least one product to checkout!", "error");
             } else {
                 // Tạo URL mới với các ID đã chọn
                 const checkoutUrl = "/cart/checkout?ids=" + selectedIds.join(",");
-                
-                // Thực hiện chuyển hướng bằng tay
                 window.location.href = checkoutUrl;
             }
         });

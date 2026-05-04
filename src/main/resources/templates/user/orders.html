@@ -219,7 +219,7 @@
         border: none;
         background: none;
         cursor: pointer;
-        font-weight: 600;
+        font-weight: 00;
         color: #666;
         white-space: nowrap;
         transition: all 0.3s;
@@ -232,6 +232,14 @@
     .tab-btn:hover {
         color: #3b82f6;
     }
+    [data-theme="dark"] .order-card, [data-theme="dark"] .empty-state {
+        background: #285a48;
+        border-color: rgba(176, 228, 204, 0.2);
+    }
+    [data-theme="dark"] .order-id, [data-theme="dark"] .order-date, [data-theme="dark"] .order-items{
+        color: #ffffff;
+    }
+    
     </style>
   </head>
   <body>
@@ -249,15 +257,6 @@
       <div th:if="${error}" class="alert alert-error">
         <i class="fas fa-exclamation-circle"></i>
         <span th:text="${error}"></span>
-      </div>
-
-      <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
-        <i class="fas fa-shopping-bag"></i>
-        <h3>No orders yet</h3>
-        <p>You have no orders yet. Start shopping now!</p>
-        <a href="/products" class="btn btn-primary" style="margin-top: 1rem"
-          >View products</a
-        >
       </div>
 
       <!-- Phân theo trạng thái đơn hàng -->
@@ -331,8 +330,18 @@
           </div>
         </div>
       </div>
-    </div>
 
+      <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>No orders yet</h3>
+        <p>You have no orders yet. Start shopping now!</p>
+        <a href="/products" class="btn btn-primary" style="margin-top: 1rem"
+          >View products</a
+        >
+      </div>
+
+    </div>
+    
     <div th:replace="~{footer :: footer}"></div>
     <!-- Đặt đoạn lọc đơn hàng ở đây -->
     <script>

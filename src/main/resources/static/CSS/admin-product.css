@@ -666,3 +666,20 @@
     background: #34d399;
     color: #064e3b;
 }
+
+[data-theme="dark"] #addProductForm .form-section {
+    background: #285a48;
+    border-color: rgba(176, 228, 204, 0.2);
+}
+
+[data-theme="dark"] #productPreview, [data-theme="dark"] #productPreview .preview-card{
+    background: #285a48;
+    border-color: rgba(176, 228, 204, 0.2);
+}
+
+[data-theme="dark"] .field-help, [data-theme="dark"] #addProductForm .form-section h3, 
+[data-theme="dark"] #productPreview h4, [data-theme="dark"] .preview-description {
+   color: #b0e4cc;
+}
+
+

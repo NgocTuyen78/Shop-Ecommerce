@@ -128,14 +128,14 @@
                   <span class="payment-label">  
                     <span class="payment-icon">💳</span>
                     <span>
-                      <strong>Pay via ATM / VNPay</strong><br>
-                      <small class="text-muted">Scan QR code via banking app or ATM card</small>
+                      <strong>Pay via VNPay</strong><br>
+                      <small class="text-muted">Please use NCB test account for sandbox payment</small>
                     </span>
                   </span>
                 </label>
               </div>
 
-              <div class="vnpay-info-section" id="vnpayInfoSection">
+              <!-- <div class="vnpay-info-section" id="vnpayInfoSection">
                 <h3>💳 Payment via VNPay (Sandbox)</h3>
                 <div class="payment-amount">
                   Amount:
@@ -143,7 +143,7 @@
                 </div>
                 <p>The system will redirect you to the actual VNPay payment gateway.</p>
                 <p><em>(Use NCB bank, enter test code)</em></p>
-              </div>
+              </div> -->
             </div>
 
             <div class="form-group">
@@ -178,7 +178,7 @@
           <div class="summary-total">
             <span>Grand Total</span>
             <strong
-              th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')}"
+              th:text="${#numbers.formatDecimal(cartTotal, 1, 'COMMA', 0, 'POINT')}"
             ></strong>
           </div>
         </div>

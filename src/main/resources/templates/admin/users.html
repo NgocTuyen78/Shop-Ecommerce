@@ -235,8 +235,7 @@
                                     <form th:if="${user.role != null and user.role.roleName != 'admin'}"
                                         th:action="@{/admin/users/{id}/reset-password(id=${user.userId})}"
                                         method="post"
-                                        style="display: inline-block; margin-left: 0.5rem;"
-                                        onsubmit="return confirm('Are you sure you want to reset the password for user?')">
+                                        style="display: inline-block; margin-left: 0.5rem;">
                                         
                                         <button type="submit" class="admin-btn admin-btn-secondary" title="Reset password to default">
                                             <i class="fas fa-key"></i> Reset Password
