@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Integer> {
     
     Optional<User> findByUsername(String username);
-    
+    Optional<User> findByPhone(String phone);
 
     @Query("SELECT u FROM User u WHERE u.username = :usernameOrEmail")
     Optional<User> findByUsernameOrEmail(@Param("usernameOrEmail") String usernameOrEmail);
@@ -33,4 +33,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     
     @Query("SELECT u FROM User u ORDER BY u.userId DESC")
     List<User> findRecentUsers(Pageable pageable);
+
 }

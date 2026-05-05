@@ -43,6 +43,14 @@ public interface UserService {
     Optional<User> getUserByEmail(String email);
 
     /**
+    * Retrieves a user by phone number.
+    *
+    * @param phone the phone number
+    * @return optional containing the user if found
+    */
+    Optional<User> getUserByPhone(String phone);
+
+    /**
      * Creates a new user.
      *
      * @param user the user to create

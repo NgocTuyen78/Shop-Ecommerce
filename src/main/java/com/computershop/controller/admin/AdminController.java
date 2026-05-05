@@ -186,6 +186,10 @@ public class AdminController {
                 throw new Exception("Tên đăng nhập này đã được sử dụng.");
             }
 
+            //Kiểm tra logic nghiệp vụ: Số điện thoại đã tồn tại chưa?
+            if (userService.getUserByPhone(phone).isPresent()) {
+                throw new Exception("Số điện thoại này đã được sử dụng.");
+            }
             // --- KẾT THÚC CÁC RÀNG BUỘC ---
 
             // Nếu vượt qua tất cả các kiểm tra trên, tiến hành tạo User

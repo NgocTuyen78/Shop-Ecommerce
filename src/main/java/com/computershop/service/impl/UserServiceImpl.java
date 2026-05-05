@@ -50,6 +50,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> getUserByPhone(String phone) {
+        return userRepository.findByPhone(phone);
+    }
+
+    @Override
     public User createUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Username '" + user.getUsername() + "' already exists");
