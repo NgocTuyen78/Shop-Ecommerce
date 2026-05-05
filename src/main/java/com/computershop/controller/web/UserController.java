@@ -38,7 +38,7 @@ public class UserController {
 
     @Autowired
     private CartServiceImpl cartService;
-    
+
     /**
      * Displays the user profile page.
      */
@@ -169,6 +169,11 @@ public class UserController {
             return "redirect:/login";
         }
 
+        // --- THÊM: Cập nhật số lượng giỏ hàng thực tế ---
+        int actualCount = cartService.getCartItemsSafe(userId).size();
+        session.setAttribute("cartCount", actualCount);
+        // ----------------------------------------------
+
         List<Order> orders = orderService.getOrdersWithDetailsForUser(userId);
         model.addAttribute("orders", orders);
 
@@ -220,6 +225,11 @@ public class UserController {
         }
 
         try {
+            // --- THÊM: Cập nhật số lượng giỏ hàng thực tế ---
+            int actualCount = cartService.getCartItemsSafe(userId).size();
+            session.setAttribute("cartCount", actualCount);
+            // ----------------------------------------------
+
             List<Object[]> orderedProducts = orderService.getOrderedProductsByUserId(userId);
             model.addAttribute("orderedProducts", orderedProducts);
             model.addAttribute("totalProducts", orderedProducts.size());
@@ -231,7 +241,6 @@ public class UserController {
 
         return "user/ordered-products";
     }
-
     /**
      * Displays the user dashboard page.
      */
