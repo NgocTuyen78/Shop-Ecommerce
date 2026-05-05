@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.computershop.main.entities.Order;
 import com.computershop.main.entities.User;
+import com.computershop.service.impl.CartServiceImpl;
 import com.computershop.service.impl.OrderServiceImpl;
 import com.computershop.service.impl.UserServiceImpl;
 
@@ -35,6 +36,9 @@ public class UserController {
     @Autowired
     private OrderServiceImpl orderService;
 
+    @Autowired
+    private CartServiceImpl cartService;
+    
     /**
      * Displays the user profile page.
      */
@@ -46,6 +50,12 @@ public class UserController {
         }
 
         try {
+            // --- PHẦN THÊM VÀO ĐỂ ĐỒNG BỘ GIỎ HÀNG ---
+            // Luôn lấy số lượng thực tế từ Database để cập nhật lại icon trên Header
+            int actualCount = cartService.getCartItemsSafe(userId).size(); 
+            session.setAttribute("cartCount", actualCount);
+            // -----------------------------------------
+
             User user = userService.getUserById(userId).orElse(null);
             if (user != null) {
                 model.addAttribute("user", user);
