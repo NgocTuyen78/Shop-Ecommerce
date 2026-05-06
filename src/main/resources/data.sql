@@ -32,7 +32,7 @@ INSERT INTO categories (category_name, description) VALUES
 -- Insert images
 INSERT INTO images (image_url) VALUES
 ('https://www.logitechg.com/content/dam/gaming/en/products/g915/g915-gallery-2.png'),
-('https://product.hstatic.net/20000/product/thumbchuot_6ed5e43202c9498aacde369cb95573b3_0859ba8bea17000e77b7e6d0c7f0_master.gif'),
+('https://product.hstatic.net/20000/product/thumbchuot_6ed5e43202c9498aacde369cb95573b3_0859ba8bea17000e77b7e6d0c7f0_master.gif'),	
 ('https://owlgaming.vn/wp-content/uploads/2024/06/ARCTIS-7P-1.jpg'),
 ('https://www.dxracer-europe.com/bilder/artiklar/32125.jpg?m=15000'),
 ('https://bizweb.dktcdn.net/100/329/122/files/amd-5700g-02.jpg?v=15000'),

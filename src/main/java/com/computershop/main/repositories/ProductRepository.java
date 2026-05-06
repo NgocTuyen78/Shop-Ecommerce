@@ -47,8 +47,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT COUNT(p) FROM Product p WHERE p.stockQuantity > 0")
     long countInStockProducts();
     
-    @Query("SELECT p FROM Product p WHERE p.stockQuantity > 0 ORDER BY p.createdAt DESC")
-    List<Product> findFeaturedProducts(Pageable pageable);
+//     @Query("SELECT p FROM Product p WHERE p.stockQuantity > 0 ORDER BY p.createdAt DESC")
+//     List<Product> findFeaturedProducts(Pageable pageable);
+@Query(value = "SELECT * FROM ( " +
+                   "  SELECT p.*, ROW_NUMBER() OVER(PARTITION BY p.category_id ORDER BY p.created_at DESC) as rank " +
+                   "  FROM products p WHERE p.stock_quantity > 0 " +
+                   ") ranked_products " +
+                   "ORDER BY rank ASC, created_at DESC " +
+                   "LIMIT :limit", nativeQuery = true)
+    List<Product> findFeaturedProducts(@Param("limit") int limit);
     
     @Query("SELECT DISTINCT c FROM Category c JOIN c.products p")
     List<Category> findDistinctCategories();
