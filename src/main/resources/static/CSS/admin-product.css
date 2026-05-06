@@ -682,4 +682,17 @@
    color: #b0e4cc;
 }
 
+.price-preview {
+    font-size: 0.9rem;
+    color: #28a745; /* Màu xanh lá cây (success) */
+    font-weight: 600;
+    margin-top: 5px;
+    min-height: 20px;
+    transition: all 0.3s ease;
+    font-style: italic;
+}
 
+/* Thêm hiệu ứng focus cho input */
+.input-with-currency input:focus + #pricePreview {
+    color: #007bff;
+}

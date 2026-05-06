@@ -122,13 +122,18 @@
                     <div class="admin-form-row">
                         <div class="admin-form-group">
                             <label for="price"><i class="fas fa-dollar-sign"></i> Price (VND) *</label>
-                            <input type="number" 
-                                   id="price"
-                                   th:field="*{price}" 
-                                   step="0.01"
-                                   min="0"
-                                   placeholder="0.00" 
-                                   required>
+                                <div class="input-with-currency">
+                                    <input type="number"
+                                           id="price"
+                                           th:field="*{price}" 
+                                           min="1000"
+                                           step="1000"
+                                           placeholder="0" 
+                                           required
+                                           oninput="updatePricePreview(this)">
+                                    
+                                </div>
+                            <div id="pricePreview" class="price-preview"></div>
                         </div>
                         <div class="admin-form-group">
                             <label for="stockQuantity"><i class="fas fa-warehouse"></i> Quantity</label>
@@ -161,19 +166,19 @@
                     </div>
 
                     
-                    <!-- <div class="admin-info-section">
+                    <div class="admin-info-section">
                         <h3><i class="fas fa-info-circle"></i> Additional Information</h3>
                         <div class="admin-info-grid">
                             <div class="admin-info-item">
                                 <label>Created At:</label>
-                                <span>N/A</span>
+                                <span th:text="${product.createdAt != null ? #temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}"></span>
                             </div>
                             <div class="admin-info-item">
                                 <label>Current Category:</label>
                                 <span th:text="${product.category?.categoryName ?: 'Uncategorized'}"></span>
                             </div>
                         </div>
-                    </div> -->
+                    </div>
 
                     <div class="admin-form-actions">
                         <button type="submit" class="admin-btn admin-btn-success">
@@ -210,7 +215,49 @@
                     setTimeout(() => alert.remove(), 300);
                 });
             }, 5000);
+            // Hiển thị preview cho giá có sẵn từ database
+            const priceInput = document.getElementById('price');
+            if(priceInput) {
+                formatPrice(priceInput);
+            }
         });
+
+        function updatePricePreview(input) {
+            const previewElement = document.getElementById('pricePreview');
+            if (!previewElement) return;
+
+            const value = input.value;
+
+            if (value && value >= 1000) {
+                // Định dạng kiểu VNĐ: 1.000.000
+                const formatted = new Intl.NumberFormat('vi-VN').format(value);
+                previewElement.textContent = 'Preview: ' + formatted + ' VND';
+            } else if (value && value < 1000) {
+                previewElement.textContent = 'Giá tối thiểu là 1.000 VND';
+                previewElement.style.color = '#dc3545'; // Màu đỏ cảnh báo
+            } else {
+                previewElement.textContent = '';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount);
+        }
+
+        function formatPrice(input) {
+            const value = input.value;
+            const previewElement = document.getElementById('pricePreview');
+            
+            if (value && value > 0) {
+                // Định dạng số: 100000 -> 100.000
+                const formatted = new Intl.NumberFormat('vi-VN').format(value);
+                previewElement.textContent = 'Preview: ' + formatted + ' VNĐ';
+                previewElement.style.display = 'block'; // Hiển thị khi có giá trị
+            } else {
+                previewElement.textContent = '';
+                previewElement.style.display = 'none'; // Ẩn khi trống
+            }
+        }
     </script>
     <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
     <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>

@@ -65,6 +65,11 @@ public class Product {
     public void setCategory(Category category) {this.category = category;}
     public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
     public void setImage(Image image) {this.image = image;}
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
     
     @Override
     public String toString() {
@@ -73,7 +78,7 @@ public class Product {
                 ", productName='" + productName + '\'' +
                 ", description='" + description + '\'' +
                 ", price=" + price +
-                ", stockQuantity=" + stockQuantity +
+                ", stockQuantity=" + stockQuantity +               
                 '}';
     }
 }

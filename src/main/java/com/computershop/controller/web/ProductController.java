@@ -22,7 +22,7 @@ import com.computershop.service.impl.ProductServiceImpl;
 @Controller
 public class ProductController {
 
-    private static final int PAGE_SIZE = 9; // products per page
+    private static final int PAGE_SIZE = 6; // products per page
 
     @Autowired
     private ProductServiceImpl productService;
