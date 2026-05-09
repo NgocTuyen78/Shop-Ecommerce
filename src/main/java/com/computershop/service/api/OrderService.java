@@ -127,4 +127,5 @@ public interface OrderService {
      * @return list of objects containing product, total quantity, and last order date
      */
     List<Object[]> getOrderedProductsByUserId(Integer userId);
+    
 }

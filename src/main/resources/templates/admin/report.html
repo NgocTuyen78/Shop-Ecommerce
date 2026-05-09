@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script th:replace="~{fragments/theme-head :: earlyInit}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Report - Computer Shop Admin</title>
+    <link rel="stylesheet" th:href="@{/CSS/admin.css}">
+    <link rel="stylesheet" th:href="@{/CSS/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/CSS/admin-order.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+.admin-filter-bar {
+    background: var(--card-bg); 
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.filter-form {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    margin-left: 4px;
+}
+
+.filter-group input[type="date"] {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.filter-group input[type="date"]:focus {
+    border-color: #4338ca; 
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15);
+}
+
+.admin-btn-primary {
+    height: 45px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 25px;
+    font-weight: 600;
+}
+
+.dark-mode .filter-group input[type="date"] {
+    border-color: #444;
+    background-color: #2d2d35;
+}
+</style>
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="admin-logo">
+                <h2><i class="fas fa-laptop"></i> Admin Panel</h2>
+            </div>
+            <ul class="admin-nav">
+                <li><a th:href="@{/admin/dashboard}"><i class="fas fa-chart-bar"></i> <span>Dashboard</span></a></li>
+                <li><a th:href="@{/admin/users}"><i class="fas fa-users"></i> <span>Users</span></a></li>
+                <li><a th:href="@{/admin/products}"><i class="fas fa-box"></i> <span>Products</span></a></li>
+                <li><a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> <span>Categories</span></a></li>
+                <li><a th:href="@{/admin/orders}"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
+                <li><a th:href="@{/admin/report}" class="active"><i class="fas fa-file-invoice-dollar"></i> <span>Report</span></a></li>
+                <li><a th:href="@{/}"><i class="fas fa-home"></i> <span>Home</span></a></li>
+                <li><a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+            </ul>
+            <!-- Collapsible Sidebar Toggle -->
+            <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand sidebar">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </nav>
+
+        <main class="admin-main">
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-header">
+                <th:block th:replace="~{fragments/theme-toggle :: buttonAdmin}"></th:block>
+                <h1><i class="fas fa-file-invoice-dollar"></i> Order & Revenue Report</h1>
+                <p>Detailed Revenue and Order Status Statistics</p>
+            </div>
+            
+            <!-- Bộ lọc ngày tháng -->
+            <div class="admin-filter-bar" style="margin-top: 20px;">
+                <form th:action="@{/admin/report}" method="get" class="filter-form">
+                    <div class="filter-group">
+                        <label for="from">From Date</label>
+                        <input type="date" id="from" name="from" th:value="${from}" />
+                    </div>
+                    <div class="filter-group">
+                        <label for="to">To Date</label>
+                        <input type="date" id="to" name="to" th:value="${to}" />
+                    </div>
+                    <button type="submit" class="admin-btn admin-btn-primary"><i class="fas fa-search"></i>Statistics</button>
+                </form>
+            </div>
+
+            <!-- Thống kê doanh thu -->
+			<div class="admin-revenue-summary" style ="margin-left: 30px; margin-right: 30px;">
+				<div class="section-header" style="margin-bottom: 15px; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+					<h2 style="font-size: 1.2rem; font-weight: 600; color: var(--text-color); display: flex; align-items: center; gap: 10px;">
+						<i class="fas fa-chart-line" style="color: #4338ca;"></i> Revenue Statistics
+					</h2>
+				
+				<div class="admin-stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 20px;">
+					
+					<!-- Total Order Value -->
+					<div class="admin-stat-card admin-stat-large">
+						<div class="admin-stat-icon admin-stat-primary">
+							<i class="fas fa-wallet"></i>
+						</div>
+						<div class="admin-stat-content">
+							<h3 th:text="${report != null ? #numbers.formatDecimal(report.totalOrderValue, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0</h3>
+							<p>Total Sales</p>
+						</div>
+					</div>
+
+					<!-- Total Paid -->
+					<div class="admin-stat-card admin-stat-large">
+						<div class="admin-stat-icon admin-stat-success">
+							<i class="fas fa-check-double"></i>
+						</div>
+						<div class="admin-stat-content">
+							<h3 th:text="${report != null ? #numbers.formatDecimal(report.totalPaid, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0</h3>
+							<p>Total Revenue (Successful Payments)</p>
+						</div>
+					</div>
+
+					<!-- Total Pending -->
+					<div class="admin-stat-card admin-stat-large">
+						<div class="admin-stat-icon admin-stat-info">
+							<i class="fas fa-clock"></i>
+						</div>
+						<div class="admin-stat-content">
+							<h3 th:text="${report != null ? #numbers.formatDecimal(report.totalPending, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0</h3>
+							<p>Pending Revenue (Awaiting Payment)</p>
+						</div>
+					</div>
+
+					<!-- Total Cancelled -->
+					<div class="admin-stat-card admin-stat-large">
+						<div class="admin-stat-icon admin-stat-danger">
+							<i class="fas fa-times-circle"></i>
+						</div>
+						<div class="admin-stat-content">
+							<h3 th:text="${report != null ? #numbers.formatDecimal(report.totalCancelled, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0</h3>
+							<p>Cancelled Value</p>
+						</div>
+					</div>
+
+				</div>
+				</div>
+			</div>
+
+            <!-- Thống kê số lượng đơn hàng theo trạng thái -->
+			<div class="admin-order-summary" style="margin-left: 30px; margin-right: 30px; margin-top: 30px;">
+				<div class="section-header" style="margin-bottom: 15px; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+					<h2 style="font-size: 1.2rem; font-weight: 600; color: var(--text-color); display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+						<i class="fas fa-shopping-cart" style="color: #4338ca;"></i> Order Statistics
+					</h2>
+					
+					<div class="admin-stats-grid order" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+						<!-- Pending -->
+						<div class="admin-stat-card">
+							<div class="admin-stat-icon admin-stat-warning">
+								<i class="fas fa-clock"></i>
+							</div>
+							<div class="admin-stat-content">
+								<h3 th:text="${pendingCount ?: 0}">0</h3>
+								<p>Pending</p>
+							</div>
+						</div>
+
+						<!-- Pending Payment -->
+						<div class="admin-stat-card">
+							<div class="admin-stat-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+								<i class="fas fa-credit-card"></i>
+							</div>
+							<div class="admin-stat-content">
+								<h3 th:text="${pendingPaymentCount ?: 0}">0</h3>
+								<p>Pending Payment</p>
+							</div>
+						</div>
+
+						<!-- Confirmed -->
+						<div class="admin-stat-card">
+							<div class="admin-stat-icon" style="background: #e0e7ff; color: #4338ca;">
+								<i class="fas fa-file-signature"></i>
+							</div>
+							<div class="admin-stat-content">
+								<h3 th:text="${confirmedCount ?: 0}">0</h3>
+								<p>Confirmed</p>
+							</div>
+						</div>
+
+						<!-- Shipping -->
+						<div class="admin-stat-card">
+							<div class="admin-stat-icon admin-stat-info">
+								<i class="fas fa-truck"></i>
+							</div>
+							<div class="admin-stat-content">
+								<h3 th:text="${shippingCount ?: 0}">0</h3>
+								<p>Shipping</p>
+							</div>
+						</div>
+
+						<!-- Completed -->
+						<div class="admin-stat-card">
+							<div class="admin-stat-icon admin-stat-success">
+								<i class="fas fa-check-circle"></i>
+							</div>
+							<div class="admin-stat-content">
+								<h3 th:text="${completedCount ?: 0}">0</h3>
+								<p>Completed</p>
+							</div>
+						</div>
+
+						<!-- Cancelled -->
+						<div class="admin-stat-card">
+							<div class="admin-stat-icon admin-stat-danger" style="background: #fee2e2; color: #dc2626;">
+								<i class="fas fa-times-circle"></i>
+							</div>
+							<div class="admin-stat-content">
+								<h3 th:text="${cancelledCount ?: 0}">0</h3>
+								<p>Cancelled</p>
+							</div>
+						</div>
+					</div> 
+				</div> 
+			</div>
+        </main>
+    </div>
+
+    <!-- SCRIPTS XỬ LÝ ĐỒNG BỘ -->
+    <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cập nhật thời gian thực
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleString('vi-VN', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                const timeElement = document.getElementById('currentTime');
+                if (timeElement) timeElement.textContent = timeString;
+            }
+            updateTime();
+            setInterval(updateTime, 60000);
+        });
+    </script>
+    <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
+</body>
+</html>

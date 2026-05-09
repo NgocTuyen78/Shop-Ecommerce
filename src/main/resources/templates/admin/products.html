@@ -23,6 +23,7 @@
                 <li><a th:href="@{/admin/products}" class="active"><i class="fas fa-box"></i> <span>Products</span></a></li>
                 <li><a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> <span>Categories</span></a></li>
                 <li><a th:href="@{/admin/orders}"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
+                <li><a th:href="@{/admin/report}"><i class="fas fa-file-invoice-dollar"></i> <span>Report</span></a></li>
                 <li><a th:href="@{/}"><i class="fas fa-home"></i> <span>Home</span></a></li>
                 <li><a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
             </ul>
@@ -122,9 +123,9 @@
 
                         <!-- Nhóm nút bấm -->
                         <div class="product-form-buttons">
-                            <!-- <button type="submit" class="product-btn-submit">
-                                <i class="fas fa-filter"></i> Search
-                            </button> -->
+                            <button type="submit" class="product-btn-submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
                             <a th:href="@{/admin/products}" class="product-btn-reset">
                                 <i class="fas fa-undo"></i> Reset
                             </a>

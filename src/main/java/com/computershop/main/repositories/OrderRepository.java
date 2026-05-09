@@ -19,8 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     
     List<Order> findByUserUserId(Integer userId);
     
-    List<Order> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate);
-    
     List<Order> findByUserOrderByOrderDateDesc(User user);
     
     List<Order> findByUserUserIdOrderByOrderDateDesc(Integer userId);
@@ -59,4 +57,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findRecentOrdersForAdmin(Pageable pageable);
 
     List<Order> findByStatus(String status);
+
+    @Query("SELECT o FROM Order o WHERE o.orderDate BETWEEN :start AND :end")
+    List<Order> findByOrderDateBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

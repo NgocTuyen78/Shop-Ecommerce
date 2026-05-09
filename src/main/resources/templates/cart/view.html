@@ -60,19 +60,13 @@
               ></td>
               <td>
                 <input
-                  type="number"
-                  min="0"
-                  th:value="${item.quantity}"
-                  class="qty-input"
-                  th:attr="data-cart-item-id=${item.cartItemId}"
+                    type="number"
+                    min="1"
+                    th:value="${item.quantity}"
+                    class="qty-input"
+                    th:attr="data-cart-item-id=${item.cartItemId}, data-max-stock=${item.product.stockQuantity}"
                 />
-                <button
-                  class="btn small update-btn"
-                  th:attr="data-cart-item-id=${item.cartItemId}"
-                >
-                  Update
-                </button>
-              </td>
+            </td>
               <td
                 th:text="${#numbers.formatDecimal(item.subtotal,1,'COMMA',0,'POINT')} + ' ₫'"
               ></td>
@@ -121,8 +115,73 @@
     const selectAll = document.getElementById("select-all");
     const itemCheckboxes = document.querySelectorAll(".cart-item-checkbox");
     const checkoutBtn = document.querySelector('.btn.primary');
+    document.querySelectorAll(".qty-input").forEach(input => {
+        // Lưu giá trị cũ để so sánh, tránh load trang nếu số không đổi
+        let oldVal = input.value;
 
-    // 1. Xử lý sự kiện Thay đổi (Chọn checkbox)
+        input.addEventListener("blur", function () {
+            handleUpdate(this);
+        });
+
+        input.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                this.blur(); // Tự động kích hoạt blur khi nhấn Enter
+            }
+        });
+
+        function handleUpdate(el) {
+        const id = el.getAttribute("data-cart-item-id");
+        const maxStock = parseInt(el.getAttribute("data-max-stock") || "999");
+        
+        // Lấy giá trị thô từ input
+        let rawValue = el.value;
+
+        // KIỂM TRA CHỮ VÀ SỐ TRỐNG (Cực kỳ quan trọng)
+        // Nếu là chữ hoặc trống, ép về 1 ngay lập tức và dừng xử lý tiếp
+        if (rawValue === "" || isNaN(rawValue)) {
+            el.value = 1;
+            window.showToast("Please enter a valid number!", "error");
+            return; 
+        }
+
+        let qty = parseInt(rawValue);
+
+        // KIỂM TRA KHOẢNG GIÁ TRỊ (1 -> max)
+        if (qty < 1) {
+            qty = 1;
+            el.value = 1;
+            window.showToast("Minimum quantity is 1!", "error");
+        } else if (qty > maxStock) {
+            qty = maxStock;
+            el.value = maxStock;
+            window.showToast(`Only ${maxStock} units available!`, "error");
+        }
+
+        if (qty.toString() !== oldVal) {
+            fetch("/cart/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ cartItemId: id, quantity: qty }),
+            }).then(response => {
+                if (response.ok) {
+                    window.showToast("Quantity updated!", "success");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 800);
+                } else {
+                    // Nếu server báo lỗi (ví dụ hết hàng thật sự ở DB)
+                    window.showToast("Update failed!", "error");
+                    el.value = oldVal; 
+                }
+            }).catch(() => {
+                window.showToast("Server error!", "error");
+                el.value = oldVal;
+            });
+          }
+        }
+    });
+
+    // Xử lý sự kiện Thay đổi (Chọn checkbox)
     document.addEventListener("change", function (e) {
         if (e.target.id === "select-all") {
             itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
@@ -135,15 +194,15 @@
         }
     });
 
-    // 2. Hàm tính lại tổng tiền dựa trên những mục được tích
+    // Hàm tính lại tổng tiền dựa trên những mục được tích
     function updateSelectedCount() {
-        // 1. Lấy tất cả các checkbox đang được tích
+        // Lấy tất cả các checkbox đang được tích
         const selectedCheckboxes = document.querySelectorAll(".cart-item-checkbox:checked");
         
         let totalItemsCount = 0; 
         let selectedTotal = 0;  
 
-        // 2. Duyệt qua từng dòng được chọn
+        // Duyệt qua từng dòng được chọn
         selectedCheckboxes.forEach(cb => {
             const row = cb.closest("tr");
 
@@ -159,21 +218,17 @@
             selectedTotal += amount;
         });
 
-        // 3. Định dạng số tiền (ví dụ: 30.000)
         const formattedTotal = selectedTotal.toLocaleString('vi-VN');
 
-        // 4. Cập nhật hiển thị (Sử dụng tiếng Anh như bạn đã yêu cầu trước đó)
         const totalDisplay = document.querySelector(".cart-summary .total");
         if (totalDisplay) {
-            // Hiển thị: (Total Items: 5) 150.000 ₫
             totalDisplay.textContent = `(Total Items: ${totalItemsCount}) ${formattedTotal} ₫`;
         }
     }
 
-    // 3. Xử lý nút Checkout (Chỉ thanh toán thứ đã chọn)
+    //Xử lý nút Checkout (Chỉ thanh toán thứ đã chọn)
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', function (e) {
-            // NGĂN CHẶN chuyển hướng mặc định ngay lập tức
             e.preventDefault(); 
 
             const selectedCheckboxes = document.querySelectorAll(".cart-item-checkbox:checked");
@@ -181,17 +236,15 @@
                                     .map(cb => cb.getAttribute("data-cart-item-id"));
 
             if (selectedIds.length === 0) {
-                // Thay thế alert bằng showToast với type "error"
                 window.showToast("Please select at least one product to checkout!", "error");
             } else {
-                // Tạo URL mới với các ID đã chọn
                 const checkoutUrl = "/cart/checkout?ids=" + selectedIds.join(",");
                 window.location.href = checkoutUrl;
             }
         });
     }
 
-    // 4. AJAX cho nút Update/Remove (giữ nguyên logic cũ của bạn)
+    // 4. AJAX cho nút Update/Remove
     document.addEventListener("click", function (e) {
         if (e.target.matches(".update-btn")) {
             const id = e.target.getAttribute("data-cart-item-id");

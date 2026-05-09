@@ -230,42 +230,66 @@
 
         <!-- Pagination -->
         <div class="pagination-wrapper" th:if="${totalPages > 1}">
-          <nav class="pagination" aria-label="Product pagination">
-            <!-- Previous page -->
-            <a th:if="${currentPage > 0}"
-               th:href="@{/products(page=${currentPage - 1}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
-               class="page-btn page-btn-nav"
-               aria-label="Previous page">
-              &laquo; Prev
-            </a>
-            <span th:if="${currentPage == 0}" class="page-btn page-btn-nav disabled">&laquo; Prev</span>
+            <nav class="pagination" aria-label="Product pagination">
+              <!-- Nút Previous -->
+              <a th:if="${currentPage > 0}"
+                th:href="@{/products(page=${currentPage - 1}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                class="page-btn page-btn-nav">&laquo; Prev</a>
+              <span th:unless="${currentPage > 0}" class="page-btn page-btn-nav disabled">&laquo; Prev</span>
 
-            <!-- Page numbers -->
-            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-              <a th:if="${i != currentPage}"
-                 th:href="@{/products(page=${i}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
-                 th:text="${i + 1}"
-                 class="page-btn">1</a>
-              <span th:if="${i == currentPage}"
-                    th:text="${i + 1}"
-                    class="page-btn page-btn-active">1</span>
-            </th:block>
+              <th:block th:if="${totalPages <= 5}">
+                  <!-- Nếu tổng số trang ít hơn hoặc bằng 5, hiện hết -->
+                  <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                      <a th:if="${i != currentPage}" th:href="@{/products(page=${i}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                        th:text="${i + 1}" class="page-btn"></a>
+                      <span th:if="${i == currentPage}" th:text="${i + 1}" class="page-btn page-btn-active"></span>
+                  </th:block>
+              </th:block>
 
-            <!-- Next page -->
-            <a th:if="${currentPage < totalPages - 1}"
-               th:href="@{/products(page=${currentPage + 1}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
-               class="page-btn page-btn-nav"
-               aria-label="Next page">
-              Next &raquo;
-            </a>
-            <span th:if="${currentPage >= totalPages - 1}" class="page-btn page-btn-nav disabled">Next &raquo;</span>
+              <th:block th:if="${totalPages > 5}">
+                  <!-- Trường hợp ở các trang đầu: 1 2 3 4 ... -->
+                  <th:block th:if="${currentPage < 3}">
+                      <th:block th:each="i : ${#numbers.sequence(0, 3)}">
+                          <a th:if="${i != currentPage}" th:href="@{/products(page=${i}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                            th:text="${i + 1}" class="page-btn"></a>
+                          <span th:if="${i == currentPage}" th:text="${i + 1}" class="page-btn page-btn-active"></span>
+                      </th:block>
+                      <span class="page-btn disabled">...</span>
+                  </th:block>
+
+                  <!-- Trường hợp ở giữa: ... 4 5 6 ... (Trang hiện tại là 5) -->
+                  <th:block th:if="${currentPage >= 3 && currentPage < totalPages - 3}">
+                      <span class="page-btn disabled">...</span>
+                      <th:block th:each="i : ${#numbers.sequence(currentPage - 1, currentPage + 1)}">
+                          <a th:if="${i != currentPage}" th:href="@{/products(page=${i}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                            th:text="${i + 1}" class="page-btn"></a>
+                          <span th:if="${i == currentPage}" th:text="${i + 1}" class="page-btn page-btn-active"></span>
+                      </th:block>
+                      <span class="page-btn disabled">...</span>
+                  </th:block>
+
+                  <!-- Trường hợp ở các trang cuối: ... 7 8 9 10 -->
+                  <th:block th:if="${currentPage >= totalPages - 3}">
+                      <span class="page-btn disabled">...</span>
+                      <th:block th:each="i : ${#numbers.sequence(totalPages - 4, totalPages - 1)}">
+                          <a th:if="${i != currentPage}" th:href="@{/products(page=${i}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                            th:text="${i + 1}" class="page-btn"></a>
+                          <span th:if="${i == currentPage}" th:text="${i + 1}" class="page-btn page-btn-active"></span>
+                      </th:block>
+                  </th:block>
+              </th:block>
+
+              <!-- Nút Next -->
+              <a th:if="${currentPage < totalPages - 1}"
+                th:href="@{/products(page=${currentPage + 1}, category=${selectedCategory}, search=${searchQuery}, sort=${currentSort}, minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                class="page-btn page-btn-nav">Next &raquo;</a>
+              <span th:unless="${currentPage < totalPages - 1}" class="page-btn page-btn-nav disabled">Next &raquo;</span>
           </nav>
           <div class="pagination-info">
             Page <strong th:text="${currentPage + 1}">1</strong> / <strong th:text="${totalPages}">1</strong>
             &nbsp;&bull;&nbsp; Total <strong th:text="${totalProducts}">0</strong> products
           </div>
         </div>
-
       </div>
     </main>
 

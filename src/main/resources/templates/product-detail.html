@@ -149,7 +149,7 @@
         margin-top: 30px;
       }
 
-      .btn {
+      /* .btn {
         padding: 15px 30px;
         border: none;
         border-radius: 8px;
@@ -160,7 +160,7 @@
         text-decoration: none;
         display: inline-block;
         text-align: center;
-      }
+      } */
 
       .btn.btn-primary {
         flex: 1;
@@ -438,10 +438,23 @@
 
       function addToCart(button) {
         const productId = button.getAttribute("data-id");
-        const quantity = document.getElementById("quantity")
-          ? parseInt(document.getElementById("quantity").value)
-          : 1;
+        const quantityInput = document.getElementById("quantity");
+        // LẤY GIÁ TRỊ VÀ KIỂM TRA NGAY TẠI ĐÂY
+        let quantityVal = quantityInput ? quantityInput.value : "1";
 
+        // 1. Kiểm tra nếu để trống hoặc không phải là số
+        if (!quantityVal || isNaN(quantityVal)) {
+            window.showToast("Please enter a valid quantity!", "error");
+            return; 
+        }
+
+        const quantity = parseInt(quantityVal);
+
+        // 2. Kiểm tra nếu số lượng nhỏ hơn 1
+        if (quantity < 1) {
+            window.showToast("Quantity must be at least 1!", "error");
+            return;
+        }
         button.disabled = true;
         const originalText = button.innerHTML;
         button.innerHTML = "Adding...";
@@ -485,7 +498,7 @@
                 "error",
               );
             button.innerHTML = originalText;
-            button.disabled = false;
+            button.disabled = false;  
           });
       }
     </script>

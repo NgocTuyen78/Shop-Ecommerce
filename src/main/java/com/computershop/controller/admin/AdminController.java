@@ -1,11 +1,15 @@
 package com.computershop.controller.admin;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.computershop.dto.ReportDTO;
 import com.computershop.main.entities.Category;
 import com.computershop.main.entities.Order;
 import com.computershop.main.entities.Product;
@@ -688,10 +693,10 @@ public String manageProducts(
         }
 
         try {
-            // 1. Lấy tất cả đơn hàng từ database
+            // Lấy tất cả đơn hàng từ database
             List<Order> orders = orderService.getAllOrders();
 
-            // 2. Thực hiện lọc danh sách dựa trên tham số (nếu có)
+            // Thực hiện lọc danh sách dựa trên tham số (nếu có)
             List<Order> filteredOrders = orders.stream()
                 .filter(o -> (orderId == null || o.getOrderId().equals(orderId)))
                 .filter(o -> (status == null || status.isEmpty() || o.getStatus().equalsIgnoreCase(status)))
@@ -699,36 +704,7 @@ public String manageProducts(
                             (o.getUser() != null && o.getUser().getUsername().toLowerCase().contains(customerName.toLowerCase()))))
                 .collect(Collectors.toList());
 
-            // 3. Tính toán thống kê (Tính trên danh sách gốc orders hoặc filteredOrders tùy bạn)
-            // Thường thống kê nên tính trên tổng số đơn hàng gốc để dashboard không bị nhảy số khi lọc
-            long pendingCount = orders.stream()
-                .filter(o -> o.getStatus() == null || "pending".equalsIgnoreCase(o.getStatus()))
-                .count();
-            long pendingPaymentCount = orders.stream()
-                .filter(o -> "pending_payment".equals(o.getStatus()))
-                .count();
-            long shippingCount = orders.stream()
-                .filter(o -> "shipping".equalsIgnoreCase(o.getStatus()))
-                .count();
-            long completedCount = orders.stream()
-                .filter(o -> "completed".equalsIgnoreCase(o.getStatus()))
-                .count();
-            long confirmedCount = orders.stream()
-                .filter(o -> "confirmed".equalsIgnoreCase(o.getStatus()))   
-                .count();
-            long cancelledCount = orders.stream()
-                .filter(o -> "cancelled".equalsIgnoreCase(o.getStatus()))
-                .count();
-
-            // 4. Gửi dữ liệu đã lọc sang View
             model.addAttribute("orders", filteredOrders); 
-            model.addAttribute("pendingCount", pendingCount);
-            model.addAttribute("pendingPaymentCount", pendingPaymentCount);
-            model.addAttribute("shippingCount", shippingCount);
-            model.addAttribute("completedCount", completedCount);
-            model.addAttribute("confirmedCount", confirmedCount);
-            model.addAttribute("cancelledCount", cancelledCount);
-            
             return "admin/orders";
 
         } catch (Exception e) {
@@ -802,5 +778,62 @@ public String manageProducts(
         }
 
         return "redirect:/admin/orders/" + orderId;
+    }
+
+    @GetMapping("/report")
+    public String showReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Model model) {
+
+        LocalDate start = (from == null) ? LocalDate.now().minusDays(30) : from;
+        LocalDate end = (to == null) ? LocalDate.now() : to;
+
+        List<Order> orders = orderService.getOrdersByPeriod(start, end);
+
+        // Tính toán doanh thu bằng Stream API
+        // 1. Tổng doanh thu phát sinh (Total Sales)
+        double totalSales = orders.stream()
+                .mapToDouble(Order::getTotalAmount) 
+                .sum();
+
+        // 2. Tiền đã thanh toán thành công (Total Revenue)
+        double totalPaid = orders.stream()
+                .filter(o -> "completed".equalsIgnoreCase(o.getStatus()) || "confirmed".equalsIgnoreCase(o.getStatus()) || "shipping".equalsIgnoreCase(o.getStatus()))
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        // 3. Tiền đang đợi thanh toán (Pending Amount)
+        double totalPending = orders.stream()
+                .filter(o -> "pending".equalsIgnoreCase(o.getStatus()) || "pending_payment".equalsIgnoreCase(o.getStatus()))
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        // 4. Giá trị đơn đã hủy (Cancelled Value)
+        double totalCancelled = orders.stream()
+                .filter(o -> "cancelled".equalsIgnoreCase(o.getStatus()))
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        // Đưa vào DTO để gửi sang HTML
+        ReportDTO report = new ReportDTO(totalSales, totalPaid, totalPending, totalCancelled);
+        model.addAttribute("report", report);
+
+        model.addAttribute("totalOrders", orders.size());
+        model.addAttribute("pendingCount", count(orders, "pending"));
+        model.addAttribute("pendingPaymentCount", count(orders, "pending_payment"));
+        model.addAttribute("confirmedCount", count(orders, "confirmed"));
+        model.addAttribute("shippingCount", count(orders, "shipping"));
+        model.addAttribute("completedCount", count(orders, "completed"));
+        model.addAttribute("cancelledCount", count(orders, "cancelled"));
+        
+        model.addAttribute("from", start);
+        model.addAttribute("to", end);
+
+        return "admin/report";
+    }
+
+    private long count(List<Order> orders, String status) {
+        return orders.stream().filter(o -> status.equalsIgnoreCase(o.getStatus())).count();
     }
 }

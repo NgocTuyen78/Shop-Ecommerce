@@ -57,6 +57,9 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartItem addToCart(Integer userId, Integer productId, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new RuntimeException("Số lượng không hợp lệ! Vui lòng nhập ít nhất 1 sản phẩm.");
+        }
         // Ensure cart exists
         Optional<Cart> cartOpt = cartRepository.findByUserIdWithItems(userId);
         Cart cart;

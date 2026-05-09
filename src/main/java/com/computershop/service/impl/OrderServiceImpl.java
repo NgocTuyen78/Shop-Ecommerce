@@ -1,6 +1,8 @@
 package com.computershop.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -216,4 +218,11 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.getTotalSpentByUserId(userId);
     }
 
+    public List<Order> getOrdersByPeriod(LocalDate from, LocalDate to) {
+        // Chuyển LocalDate sang LocalDateTime để quét từ đầu ngày From đến cuối ngày To
+        LocalDateTime startDT = from.atStartOfDay(); 
+        LocalDateTime endDT = to.atTime(LocalTime.MAX); 
+        
+        return orderRepository.findByOrderDateBetween(startDT, endDT);
+    }
 }
