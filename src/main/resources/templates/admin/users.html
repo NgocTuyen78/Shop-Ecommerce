@@ -81,35 +81,40 @@
                 <div class="card-header">
                     <h3><i class="fas fa-user-plus"></i> Add New User</h3>
                 </div>
-                <form th:action="@{/admin/users/add}" method="post" class="admin-action-form">
+                <form th:action="@{/admin/users/add}" method="post" class="admin-action-form" id="addUserForm" novalidate>
                     <div class="input-field">
                         <label>Username</label>
-                        <input type="text" name="username" 
+                        <input type="text" id="adminUsername" name="username" 
                             th:value="${oldUsername}" 
                             placeholder="Enter username" />
+                        <div id="adminUsernameError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.8rem; margin-top: 4px;"></div>
                     </div>
 
                     <div class="input-field">
                         <label>Phone Number</label>
-                        <input type="tel" name="phone" 
+                        <input type="tel" id="adminPhone" name="phone" 
                             th:value="${oldPhone}" 
                             placeholder="Enter phone number" />
+                        <div id="adminPhoneError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.8rem; margin-top: 4px;"></div>
                     </div>
 
                     <div class="input-field">
                         <label>Address</label>
-                        <input type="text" name="address" 
+                        <input type="text" id="adminAddress" name="address" 
                             th:value="${oldAddress}" 
                             placeholder="Enter address" />
+                        <div id="adminAddressError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.8rem; margin-top: 4px;"></div>
                     </div>
-                                        <div class="input-field">
+
+                    <div class="input-field">
                         <label>Password</label>
-                        <input type="password" 
+                        <input type="password" id="adminPassword"
                             name="password" 
                             th:value="${oldPassword}" 
-                            required 
                             placeholder="••••••••" />
+                        <div id="adminPasswordError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.8rem; margin-top: 4px;"></div>
                     </div>
+
                     <div class="input-field role-select">
                         <label>Role</label>
                         <select name="role">
@@ -117,7 +122,8 @@
                             <option value="admin">Admin</option>
                         </select>
                     </div>
-                    <button type="submit" class="admin-btn admin-btn-primary">
+
+                    <button type="submit" id="adminCreateBtn" class="admin-btn admin-btn-primary">
                         <i class="fas fa-plus"></i> Create
                     </button>
                 </form>
@@ -287,6 +293,106 @@
                 });
             }, 5000);
         });
+    </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const addUserForm = document.getElementById('addUserForm');
+        const uInput = document.getElementById('adminUsername');
+        const pInput = document.getElementById('adminPhone');
+        const aInput = document.getElementById('adminAddress');
+        const passInput = document.getElementById('adminPassword');
+        const createBtn = document.getElementById('adminCreateBtn');
+
+        function validateAdminAddUser() {
+            let isUOk = true, isPOk = true, isAOk = true, isPassOk = true;
+
+            // 1. Username: Không trống, tối thiểu 4 ký tự
+            const uVal = uInput.value.trim();
+            const uErr = document.getElementById('adminUsernameError');
+            if (uVal.length > 0 && uVal.length < 4) {
+                showErr(uInput, uErr, "Username must be at least 4 characters.");
+                isUOk = false;
+            } else if (uVal.length === 0) {
+                isUOk = false; // Vẫn khóa nút nhưng chưa hiện lỗi nếu đang trống
+                hideErr(uInput, uErr);
+            } else {
+                hideErr(uInput, uErr);
+            }
+
+            // 2. Phone: Bắt đầu bằng 0, đúng 10 số
+            const pVal = pInput.value.trim();
+            const pErr = document.getElementById('adminPhoneError');
+            if (pVal.length > 0 && !/^0\d{9}$/.test(pVal)) {
+                showErr(pInput, pErr, "Phone must be 10 digits starting with 0.");
+                isPOk = false;
+            } else if (pVal.length === 0) {
+                isPOk = false;
+                hideErr(pInput, pErr);
+            } else {
+                hideErr(pInput, pErr);
+            }
+
+            // 3. Address: Không trống, >= 10 ký tự, không toàn số
+            const aVal = aInput.value.trim();
+            const aErr = document.getElementById('adminAddressError');
+            const aClean = aVal.replace(/\s/g, '');
+            const isOnlyNum = aClean.length > 0 && /^\d+$/.test(aClean);
+            if (aVal.length > 0 && (aVal.length < 10 || isOnlyNum)) {
+                showErr(aInput, aErr, isOnlyNum ? "Address cannot be only numbers." : "Address must be at least 10 chars.");
+                isAOk = false;
+            } else if (aVal.length === 0) {
+                isAOk = false;
+                hideErr(aInput, aErr);
+            } else {
+                hideErr(aInput, aErr);
+            }
+
+            // 4. Password: Không trống, >= 6 ký tự
+            const passVal = passInput.value;
+            const passErr = document.getElementById('adminPasswordError');
+            if (passVal.length > 0 && passVal.length < 6) {
+                showErr(passInput, passErr, "Password must be at least 6 characters.");
+                isPassOk = false;
+            } else if (passVal.length === 0) {
+                isPassOk = false;
+                hideErr(passInput, passErr);
+            } else {
+                hideErr(passInput, passErr);
+            }
+
+            // Trạng thái nút bấm
+            const canSubmit = isUOk && isPOk && isAOk && isPassOk;
+            createBtn.disabled = !canSubmit;
+            createBtn.style.opacity = canSubmit ? "1" : "0.5";
+            createBtn.style.cursor = canSubmit ? "pointer" : "not-allowed";
+        }
+
+        // Helper functions
+        function showErr(input, div, msg) {
+            div.textContent = msg;
+            div.style.display = 'block';
+            input.style.borderColor = '#ff4d4d';
+        }
+        function hideErr(input, div) {
+            div.style.display = 'none';
+            input.style.borderColor = '';
+        }
+
+        // Gán sự kiện
+        [uInput, pInput, aInput, passInput].forEach(el => {
+            el.addEventListener('input', validateAdminAddUser);
+        });
+
+        // Chặn submit nếu lỗi
+        addUserForm.addEventListener('submit', function(e) {
+            if (createBtn.disabled) {
+                e.preventDefault();
+            }
+        });
+
+        // Chạy kiểm tra ban đầu
+        validateAdminAddUser();
+    });
     </script>
     <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
     <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>

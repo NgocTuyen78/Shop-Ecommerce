@@ -111,7 +111,7 @@
                             <div class="admin-form-group">
                                 <label for="price"><i class="fas fa-money-bill-wave"></i> Selling Price (VND) *</label>
                                 <div class="input-with-currency">
-                                    <input type="number"
+                                    <input type="text"
                                            id="price"
                                            th:field="*{price}" 
                                            min="1000"
@@ -126,14 +126,14 @@
                             </div>
                             <div class="admin-form-group">
                                 <label for="stockQuantity"><i class="fas fa-warehouse"></i> Stock Quantity</label>
-                                <input type="number" 
+                                <input type="text" 
                                        id="stockQuantity"
                                        th:field="*{stockQuantity}" 
                                        min="0"
                                        placeholder="0"
                                        oninput="validateForm(); updateStockStatus(this.value)">
-                                <!-- <div class="field-help">Leave blank if no stock</div> -->
-                                <div id="stockStatus" class="stock-status"></div>
+                                <div id="stockStatus" class="stock-status" style="min-height: 1.2rem;"></div>
+                                <div id="stockError" class="error-msg" style="color: #e74c3c; display: none; font-size: 0.85rem; margin-top: 5px; font-weight: 500;"></div>
                             </div>
                         </div>
                     </div>
@@ -142,7 +142,7 @@
                     <div class="form-section">
                         <h3><i class="fas fa-image"></i> Product Image</h3>
                         <div class="admin-form-group">
-                            <label for="imageUrl"><i class="fas fa-link"></i> Image URL</label>
+                            <label for="imageUrl"><i class="fas fa-link"></i> Image URL *</label>
                             <input type="url"
                                    id="imageUrl"
                                    name="imageUrl"
@@ -212,162 +212,261 @@
     </div>
 
     <script>
-        // Form validation and preview
-        function validateForm() {
-            const form = document.getElementById('addProductForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const progressFill = document.getElementById('formProgress');
-            const progressText = document.querySelector('.progress-text');
-            
-            const productName = document.getElementById('productName').value.trim();
-            const categoryId = document.getElementById('categoryId').value;
-            const price = document.getElementById('price').value;
-            
-            let progress = 0;
-            let isValid = true;
-            
-            // Check required fields
-            if (productName) progress += 33.33;
-            else isValid = false;
-            
-            if (categoryId) progress += 33.33;
-            else isValid = false;
-            
-            if (price && parseFloat(price) >= 1000) progress += 33.34;
-            else isValid = false;
-            
-            // Update progress bar
-            progressFill.style.width = progress + '%';
-            progressText.textContent = Math.round(progress) + '% Completed';
-            
-            // Update submit button
-            submitBtn.disabled = !isValid;
-            
-            // Update preview
-            updatePreview();
+    document.addEventListener("DOMContentLoaded", function() {
+        validateForm();
+
+        // 1. CHẶN NHẬP KÝ TỰ LẠ VÀO Ô SỐ (e, -, +)
+        const numberInputs = ['price', 'stockQuantity'];
+        numberInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('keydown', function(e) {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+
+        const addProductForm = document.getElementById('addProductForm');
+        if (addProductForm) {
+            addProductForm.addEventListener('submit', function(e) {
+                const stockInput = document.getElementById('stockQuantity');
+                if (stockInput && stockInput.value === "") {
+                    stockInput.value = "0";
+                }
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            });
         }
 
-        function updatePreview() {
-            const productName = document.getElementById('productName').value.trim();
-            const categorySelect = document.getElementById('categoryId');
-            const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text || 'No category selected';
-            const price = document.getElementById('price').value;
-            const stock = document.getElementById('stockQuantity').value;
-            const description = document.getElementById('description').value.trim();
-            const imageUrl = document.getElementById('imageUrl') ? document.getElementById('imageUrl').value.trim() : '';
-            
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.admin-alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+    });
+
+    function validateForm() {
+        const submitBtn = document.getElementById('submitBtn');
+        const priceInput = document.getElementById('price');
+        const stockInput = document.getElementById('stockQuantity');
+        
+        const pricePreview = document.getElementById('pricePreview');
+        const stockStatus = document.getElementById('stockStatus');
+        const stockError = document.getElementById('stockError');
+        
+        const priceValue = priceInput.value.trim();
+        const stockValue = stockInput.value.trim();
+        
+        let isPriceValid = false;
+        let isStockValid = false;
+        
+        const isNumeric = (val) => /^\d+$/.test(val);
+
+        // --- KIỂM TRA Ô GIÁ ---
+        if (priceValue === "") {
+            // TRƯỜNG HỢP TRỐNG: Ẩn thông báo lỗi, nhưng không cho submit
+            pricePreview.textContent = ""; 
+            priceInput.style.borderColor = ""; 
+            isPriceValid = false; 
+        } else if (!isNumeric(priceValue)) {
+            // Có nhập nhưng sai định dạng
+            pricePreview.textContent = "Value must be a number!";
+            pricePreview.style.color = "#e74c3c";
+            priceInput.style.borderColor = "#e74c3c";
+            isPriceValid = false;
+        } else if (parseInt(priceValue) < 1000) {
+            // Có nhập số nhưng quá thấp
+            pricePreview.textContent = "Minimum price is 1,000 VND";
+            pricePreview.style.color = "#e74c3c";
+            priceInput.style.borderColor = "#e74c3c";
+            isPriceValid = false;
+        } else {
+            // Hợp lệ
+            pricePreview.textContent = "Current: " + formatCurrency(priceValue) + " VND";
+            pricePreview.style.color = "#2ecc71";
+            priceInput.style.borderColor = ""; 
+            isPriceValid = true;
+        }
+
+        // --- KIỂM TRA Ô SỐ LƯỢNG ---
+        if (stockValue === "") {
+            // Trống: Ẩn lỗi đỏ, hiện trạng thái mặc định (màu cam)
+            if (stockError) stockError.style.display = 'none';
+            stockStatus.style.display = 'block';
+            stockStatus.textContent = 'Status: Out of stock (Default 0)';
+            stockStatus.style.color = '#e67e22';
+            stockInput.style.borderColor = ''; 
+            isStockValid = true; 
+        } else if (!isNumeric(stockValue)) {
+            // Sai định dạng: Hiện lỗi đỏ, ẩn trạng thái kho
+            if (stockError) {
+                stockError.textContent = 'Value must be a number!';
+                stockError.style.display = 'block';
+            }
+            stockStatus.style.display = 'none';
+            stockInput.style.borderColor = '#e74c3c';
+            isStockValid = false;
+        } else {
+            // Hợp lệ
+            if (stockError) stockError.style.display = 'none';
+            stockStatus.style.display = 'block';
+            updateStockStatus(stockValue);
+            stockInput.style.borderColor = '';
+            isStockValid = true;
+        }
+
+        // --- KIỂM TRA CÁC TRƯỜNG KHÁC ---
+        const productName = document.getElementById('productName').value.trim();
+        const categoryId = document.getElementById('categoryId').value;
+        const isOtherValid = productName.length >= 4 && categoryId !== "";
+
+        // --- CẬP NHẬT NÚT SUBMIT ---
+        const finalValid = isPriceValid && isStockValid && isOtherValid;
+        if (submitBtn) {
+            submitBtn.disabled = !finalValid;
+            submitBtn.style.opacity = finalValid ? "1" : "0.5";
+            submitBtn.style.cursor = finalValid ? "pointer" : "not-allowed";
+        }
+
+        updatePreview();
+    }
+
+    // Hàm updateStockStatus hỗ trợ (để đổi màu xanh/vàng cho chuyên nghiệp)
+    function updateStockStatus(value) {
+        const statusElement = document.getElementById('stockStatus');
+        const stock = parseInt(value);
+        if (stock <= 0) {
+            statusElement.textContent = 'Status: Out of stock';
+            statusElement.style.color = '#e67e22';
+        } else if (stock <= 5) {
+            statusElement.textContent = 'Status: Low stock';
+            statusElement.style.color = '#f1c40f';
+        } else {
+            statusElement.textContent = 'Status: In stock';
+            statusElement.style.color = '#2ecc71';
+        }
+    }
+
+    function updatePreview() {
+        const productName = document.getElementById('productName').value.trim();
+        const categorySelect = document.getElementById('categoryId');
+        const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text || 'No category selected';
+        const price = document.getElementById('price').value;
+        const stock = document.getElementById('stockQuantity').value;
+        const description = document.getElementById('description').value.trim();
+        const imageUrl = document.getElementById('imageUrl') ? document.getElementById('imageUrl').value.trim() : '';
+        const isNumeric = (val) => /^\d+$/.test(val);
+
+        if (document.querySelector('.preview-name'))
             document.querySelector('.preview-name').textContent = productName || 'Product name will appear here';
+        
+        if (document.querySelector('.preview-category'))
             document.querySelector('.preview-category').textContent = categoryName;
-            document.querySelector('.preview-price').textContent = price ? formatCurrency(price) + ' VND' : '0 VND';
+        
+        if (document.querySelector('.preview-price')) {
+            document.querySelector('.preview-price').textContent = (price && isNumeric(price)) ? formatCurrency(price) + ' VND' : '0 VND';
+        }
+        
+        if (document.querySelector('.preview-description'))
             document.querySelector('.preview-description').textContent = description || 'Product description will appear here';
-            
-            // Update preview image
-            const previewImageWrapper = document.getElementById('previewImageWrapper');
-            const previewImage = document.getElementById('previewImage');
-            if (imageUrl && previewImageWrapper && previewImage) {
-                previewImage.src = imageUrl;
-                previewImageWrapper.style.display = 'block';
-            } else if (previewImageWrapper) {
-                previewImageWrapper.style.display = 'none';
-            }
-            
-            const stockElement = document.querySelector('.preview-stock');
-            if (stock && parseInt(stock) > 0) {
+        
+        const previewImageWrapper = document.getElementById('previewImageWrapper');
+        const previewImage = document.getElementById('previewImage');
+        if (imageUrl && previewImageWrapper && previewImage) {
+            previewImage.src = imageUrl;
+            previewImageWrapper.style.display = 'block';
+        } else if (previewImageWrapper) {
+            previewImageWrapper.style.display = 'none';
+        }
+        
+        const stockElement = document.querySelector('.preview-stock');
+        if (stockElement) {
+            if (stock !== "" && isNumeric(stock) && parseInt(stock) > 0) {
                 stockElement.textContent = 'In stock: ' + stock;
-                stockElement.className = 'preview-stock in-stock';
+                stockElement.style.color = '#2ecc71';
             } else {
-                stockElement.textContent = 'Out of stock';
-                stockElement.className = 'preview-stock out-stock';
+                stockElement.textContent = 'Out of stock (Default: 0)';
+                stockElement.style.color = '#e67e22';
             }
         }
+    }
 
-        function previewImage(url) {
-            const container = document.getElementById('imagePreviewContainer');
-            const img = document.getElementById('imagePreviewImg');
-            if (url && container && img) {
-                img.src = url;
-                img.onerror = function() { container.style.display = 'none'; };
-                img.onload = function() { container.style.display = 'block'; };
-                container.style.display = 'block';
-            } else if (container) {
-                container.style.display = 'none';
-            }
+    function previewImage(url) {
+        const container = document.getElementById('imagePreviewContainer');
+        const img = document.getElementById('imagePreviewImg');
+        if (url && container && img) {
+            img.src = url;
+            img.onerror = function() { container.style.display = 'none'; };
+            img.onload = function() { container.style.display = 'block'; };
+        } else if (container) {
+            container.style.display = 'none';
         }
+        updatePreview();
+    }
 
+    function formatPrice(input) {
+        // Hàm này giờ được tích hợp vào validateForm để xử lý báo lỗi đồng bộ
+        validateForm();
+    }
 
-        function formatPrice(input) {
-            const value = input.value;
-            if (value) {
-                document.getElementById('pricePreview').textContent = 
-                    'Preview: ' + formatCurrency(value) + ' VND';
-            } else {
-                document.getElementById('pricePreview').textContent = '';
-            }
-        }
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN').format(amount);
+    }
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount);
-        }
+    function updateStockStatus(value) {
+        const statusElement = document.getElementById('stockStatus');
+        if (!statusElement) return;
+        const isNumeric = (val) => /^\d+$/.test(val);
 
-        function updateStockStatus(value) {
-            const statusElement = document.getElementById('stockStatus');
+        if (value === "" || !isNumeric(value) || parseInt(value) === 0) {
+            statusElement.textContent = 'Status: Out of stock (Default 0)';
+            statusElement.style.color = '#e67e22';
+        } else {
             const stock = parseInt(value);
-            
-            if (isNaN(stock) || stock === 0) {
-                statusElement.textContent = 'Status: Out of stock';
-                statusElement.className = 'stock-status out-of-stock';
-            } else if (stock <= 5) {
+            if (stock <= 5) {
                 statusElement.textContent = 'Status: Low stock';
-                statusElement.className = 'stock-status low-stock';
-            } else if (stock <= 20) {
-                statusElement.textContent = 'Status: Very few in stock';
-                statusElement.className = 'stock-status medium-stock';
+                statusElement.style.color = '#f1c40f';
             } else {
                 statusElement.textContent = 'Status: In stock';
-                statusElement.className = 'stock-status in-stock';
+                statusElement.style.color = '#2ecc71';
             }
         }
+    }
 
-        function updateCharCount(textarea) {
-            const count = textarea.value.length;
-            document.getElementById('charCount').textContent = count;
-            
-            const counter = document.querySelector('.char-counter');
+    function updateCharCount(textarea) {
+        const count = textarea.value.length;
+        const charDisplay = document.getElementById('charCount');
+        if (charDisplay) charDisplay.textContent = count;
+        
+        const counter = document.querySelector('.char-counter');
+        if (counter) {
             if (count > 1000) {
                 counter.style.color = '#e74c3c';
                 textarea.value = textarea.value.substring(0, 1000);
-                updateCharCount(textarea);
-            } else if (count > 800) {
-                counter.style.color = '#f39c12';
             } else {
                 counter.style.color = '#7f8c8d';
             }
         }
+    }
 
-        function resetForm() {
-            document.getElementById('addProductForm').reset();
+    function resetForm() {
+        const form = document.getElementById('addProductForm');
+        if (form) {
+            form.reset();
             setTimeout(() => {
                 validateForm();
-                document.getElementById('pricePreview').textContent = '';
-                document.getElementById('stockStatus').textContent = '';
-                document.getElementById('charCount').textContent = '0';
-                document.querySelector('.char-counter').style.color = '#7f8c8d';
-            }, 100);
+                if(document.getElementById('pricePreview')) document.getElementById('pricePreview').textContent = '';
+                if(document.getElementById('stockStatus')) document.getElementById('stockStatus').textContent = '';
+                if(document.getElementById('charCount')) document.getElementById('charCount').textContent = '0';
+                if(document.getElementById('imagePreviewContainer')) document.getElementById('imagePreviewContainer').style.display = 'none';
+            }, 10);
         }
-
-        // Auto-hide flash messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            validateForm();
-            
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.admin-alert');
-                alerts.forEach(alert => {
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 300);
-                });
-            }, 5000);
-        });
-    </script>
+    }
+</script>
 
     <style>
         /* Additional styles for add product page */

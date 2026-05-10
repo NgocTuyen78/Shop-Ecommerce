@@ -123,38 +123,28 @@
                     <div class="admin-form-row">
                         <div class="admin-form-group">
                             <label for="price"><i class="fas fa-dollar-sign"></i> Price (VND) *</label>
-                                <div class="input-with-currency">
-                                    <input type="number"
-                                           id="price"
-                                           th:field="*{price}" 
-                                           min="1000"
-                                           step="1000"
-                                           placeholder="0" 
-                                           required
-                                           oninput="updatePricePreview(this)">
-                                    
-                                </div>
-                            <div id="pricePreview" class="price-preview"></div>
+                            <div class="input-with-currency">
+                                <input type="text" id="price" th:field="*{price}" 
+                                    placeholder="0" required 
+                                    oninput="validateForm()">
+                            </div>
+                            <div id="pricePreview" class="price-preview" style="min-height: 1.2rem; font-size: 0.85rem; margin-top: 4px;"></div>
                         </div>
                         <div class="admin-form-group">
                             <label for="stockQuantity"><i class="fas fa-warehouse"></i> Quantity</label>
-                            <input type="number" 
-                                   id="stockQuantity"
-                                   th:field="*{stockQuantity}" 
-                                   min="0"
-                                   placeholder="0">
-                            <small class="form-help">
-                                Current status: 
-                                <span th:if="${product.stockQuantity > 20}" class="text-success">
-                                    <i class="fas fa-check-circle"></i> In stock
-                                </span>
-                                <span th:if="${product.stockQuantity > 0 && product.stockQuantity <= 20}" class="text-warning">
-                                    <i class="fas fa-exclamation-triangle"></i> Low stock
-                                </span>
-                                <span th:if="${product.stockQuantity <= 0}" class="text-danger">
-                                    <i class="fas fa-times-circle"></i> Out of stock
-                                </span>
-                            </small>
+                            <input type="text" id="stockQuantity" th:field="*{stockQuantity}" 
+                                placeholder="0" oninput="validateForm()">
+                            
+                            <div id="stockError" style="color: #e74c3c; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
+                            
+                            <div id="stockStatus" class="stock-status" style="min-height: 1.2rem; font-size: 0.85rem; margin-top: 2px;">
+                                <small class="form-help">
+                                    Current status: 
+                                    <span th:if="${product.stockQuantity > 20}" class="text-success"><i class="fas fa-check-circle"></i> In stock</span>
+                                    <span th:if="${product.stockQuantity > 0 && product.stockQuantity <= 20}" class="text-warning"><i class="fas fa-exclamation-triangle"></i> Low stock</span>
+                                    <span th:if="${product.stockQuantity <= 0}" class="text-danger"><i class="fas fa-times-circle"></i> Out of stock</span>
+                                </small>
+                            </div>
                         </div>
                     </div>
 
@@ -207,59 +197,150 @@
     </div>
 
     <script>
-        // Auto-hide flash messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.admin-alert');
-                alerts.forEach(alert => {
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 300);
+    document.addEventListener("DOMContentLoaded", function() {
+        // Thêm ID cho nút submit để JS dễ điều khiển
+        const btn = document.querySelector('button[type="submit"].admin-btn-success');
+        if(btn) btn.id = "submitBtn";
+
+        // Khởi tạo kiểm tra form khi vừa load trang
+        validateForm();
+
+        // 1. CHẶN NHẬP KÝ TỰ LẠ (Chỉ mang tính chất hỗ trợ phím bấm)
+        const numberInputs = ['price', 'stockQuantity'];
+        numberInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('keydown', function(e) {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                    }
                 });
-            }, 5000);
-            // Hiển thị preview cho giá có sẵn từ database
-            const priceInput = document.getElementById('price');
-            if(priceInput) {
-                formatPrice(priceInput);
             }
         });
 
-        function updatePricePreview(input) {
-            const previewElement = document.getElementById('pricePreview');
-            if (!previewElement) return;
+        // 2. TỰ ĐỘNG GÁN STOCK = 0 NẾU ĐỂ TRỐNG KHI SUBMIT
+        const editForm = document.querySelector('form'); // Form edit
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                const stockInput = document.getElementById('stockQuantity');
+                if (stockInput && stockInput.value.trim() === "") {
+                    stockInput.value = "0";
+                }
+                const submitBtn = document.getElementById('submitBtn');
+                if(submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            });
+        }
 
-            const value = input.value;
+        // 3. TỰ ĐỘNG ẨN THÔNG BÁO FLASH
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.admin-alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+    });
 
-            if (value && value >= 1000) {
-                // Định dạng kiểu VNĐ: 1.000.000
-                const formatted = new Intl.NumberFormat('vi-VN').format(value);
-                previewElement.textContent = 'Preview: ' + formatted + ' VND';
-            } else if (value && value < 1000) {
-                previewElement.textContent = 'Giá tối thiểu là 1.000 VND';
-                previewElement.style.color = '#dc3545'; // Màu đỏ cảnh báo
+    function validateForm() {
+        const submitBtn = document.getElementById('submitBtn');
+        const priceInput = document.getElementById('price');
+        const stockInput = document.getElementById('stockQuantity');
+        
+        const pricePreview = document.getElementById('pricePreview');
+        const stockStatus = document.getElementById('stockStatus');
+        const stockError = document.getElementById('stockError');
+        
+        // Lấy giá trị thô từ input
+        let priceValue = priceInput.value.trim();
+        let stockValue = stockInput.value.trim();
+        
+        let isPriceValid = false;
+        let isStockValid = false;
+        
+        // Hàm kiểm tra số: Chấp nhận cả số nguyên và số thập phân (để khớp dữ liệu DB)
+        const isNumeric = (val) => val !== "" && !isNaN(val) && !/\s/.test(val);
+
+        // --- KIỂM TRA Ô GIÁ ---
+        if (priceValue === "") {
+            pricePreview.textContent = ""; 
+            priceInput.style.borderColor = ""; 
+            isPriceValid = false; 
+        } else if (!isNumeric(priceValue)) {
+            // Nếu chứa chữ hoặc ký tự đặc biệt thực sự
+            pricePreview.textContent = "Value must be a number!";
+            pricePreview.style.color = "#e74c3c";
+            priceInput.style.borderColor = "#e74c3c";
+            isPriceValid = false;
+        } else {
+            // Nếu là số hợp lệ (bao gồm cả 20000.00)
+            const priceNum = parseFloat(priceValue);
+            if (priceNum < 1000) {
+                pricePreview.textContent = "Minimum price is 1,000 VND";
+                pricePreview.style.color = "#e74c3c";
+                priceInput.style.borderColor = "#e74c3c";
+                isPriceValid = false;
             } else {
-                previewElement.textContent = '';
+                // HIỂN THỊ PREVIEW XANH NGAY KHI MỚI VÀO
+                pricePreview.textContent = "Preview: " + formatCurrency(priceNum) + " VND";
+                pricePreview.style.color = "#2ecc71";
+                priceInput.style.borderColor = ""; 
+                isPriceValid = true;
             }
         }
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount);
+        // --- KIỂM TRA Ô SỐ LƯỢNG ---
+        if (stockValue === "") {
+            if (stockError) stockError.style.display = 'none';
+            stockStatus.style.display = 'block';
+            stockStatus.innerHTML = '<span style="color:#e67e22">Status: Out of stock (Default 0)</span>';
+            stockInput.style.borderColor = ''; 
+            isStockValid = true; 
+        } else if (!isNumeric(stockValue)) {
+            if (stockError) {
+                stockError.textContent = 'Value must be a number!';
+                stockError.style.display = 'block';
+            }
+            stockStatus.style.display = 'none';
+            stockInput.style.borderColor = '#e74c3c';
+            isStockValid = false;
+        } else {
+            if (stockError) stockError.style.display = 'none';
+            stockStatus.style.display = 'block';
+            updateStockStatusUI(stockValue);
+            stockInput.style.borderColor = '';
+            isStockValid = true;
         }
 
-        function formatPrice(input) {
-            const value = input.value;
-            const previewElement = document.getElementById('pricePreview');
-            
-            if (value && value > 0) {
-                // Định dạng số: 100000 -> 100.000
-                const formatted = new Intl.NumberFormat('vi-VN').format(value);
-                previewElement.textContent = 'Preview: ' + formatted + ' VNĐ';
-                previewElement.style.display = 'block'; // Hiển thị khi có giá trị
-            } else {
-                previewElement.textContent = '';
-                previewElement.style.display = 'none'; // Ẩn khi trống
-            }
+        // --- KIỂM TRA CÁC TRƯỜNG KHÁC ---
+        const productName = document.getElementById('productName').value.trim();
+        const categoryId = document.getElementById('categoryId').value;
+        const isOtherValid = productName.length >= 4 && categoryId !== "";
+
+        // --- CẬP NHẬT NÚT SUBMIT ---
+        const finalValid = isPriceValid && isStockValid && isOtherValid;
+        if (submitBtn) {
+            submitBtn.disabled = !finalValid;
+            submitBtn.style.opacity = finalValid ? "1" : "0.5";
+            submitBtn.style.cursor = finalValid ? "pointer" : "not-allowed";
         }
-    </script>
+    }
+
+    function updateStockStatusUI(value) {
+        const statusElement = document.getElementById('stockStatus');
+        const stock = parseInt(value);
+        if (stock <= 0) {
+            statusElement.innerHTML = '<span style="color:#e67e22">Status: Out of stock</span>';
+        } else if (stock <= 5) {
+            statusElement.innerHTML = '<span style="color:#f1c40f">Status: Low stock</span>';
+        } else {
+            statusElement.innerHTML = '<span style="color:#2ecc71">Status: In stock</span>';
+        }
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN').format(amount);
+    }
+</script>
     <script th:src="@{/JavaScript/admin-sidebar.js}"></script>
     <th:block th:replace="~{fragments/admin-scripts :: themeScript}"></th:block>
 

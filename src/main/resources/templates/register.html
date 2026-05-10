@@ -25,31 +25,33 @@
             <div th:if="${error}" class="error" th:text="${error}">Registration Error</div>
             <div th:if="${success}" class="success" th:text="${success}">Successfully registered</div>
 
-            <form th:action="@{/register}" method="post">
+            <form th:action="@{/register}" method="post" id="registerForm" novalidate>
                 <div class="form-row">
                     <label for="username" class="form-label">Username</label>
                     <input id="username" name="username" type="text" class="form-control" placeholder="Enter username" th:value="${username}" required />
+                    <div id="usernameError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
                 </div>
 
                 <div class="form-row">
                     <label for="password" class="form-label">Password</label>
                     <input id="password" name="password" type="password" class="form-control" placeholder="••••••••" required />
+                    <div id="passwordError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
                 </div>
 
                 <div class="form-row">
                     <label for="confirmPassword" class="form-label">Confirm Password</label>
                     <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" placeholder="••••••••" required />
+                    <div id="confirmPasswordError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
                 </div>
 
                 <div class="form-row">
                     <label for="address" class="form-label">Default Shipping Address</label>
                     <textarea id="address" name="address" class="form-control" placeholder="Enter your default shipping address..." rows="3" required th:text="${address}"></textarea>
+                    <div id="addressError" class="error-msg" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
                     <small class="text-muted">This address will be used by default when ordering</small>
                 </div>
 
-
-
-                <button class="btn btn-primary btn-full" type="submit">Register</button>
+                <button id="registerBtn" class="btn btn-primary btn-full" type="submit">Register</button>
             </form>
 
             <div class="auth-links">
@@ -63,5 +65,99 @@
 
     <script th:src="@{/JavaScript/header.js}"></script>
     <script th:src="@{/JavaScript/main.js}"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const registerForm = document.getElementById('registerForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        const addressInput = document.getElementById('address');
+        const registerBtn = document.getElementById('registerBtn');
+
+        function validateField(input, errorDiv, condition, errorMsg) {
+            const value = input.value.trim();
+            
+            // NẾU Ô TRỐNG: Ẩn lỗi, trả về false để nút vẫn bị khóa (vì trường này required)
+            if (value.length === 0 && input.type !== 'password') {
+                hideError(input, errorDiv);
+                return false;
+            }
+
+            // Thực hiện kiểm tra điều kiện
+            if (condition) {
+                showError(input, errorDiv, errorMsg);
+                return false;
+            } else {
+                hideError(input, errorDiv);
+                return true;
+            }
+        }
+
+        function checkAll() {
+            const userVal = usernameInput.value.trim();
+            const passVal = passwordInput.value;
+            const confirmVal = confirmInput.value;
+            const addrVal = addressInput.value.trim();
+            const addrClean = addrVal.replace(/\s/g, '');
+            const isOnlyNumbers = addrClean.length > 0 && /^\d+$/.test(addrClean);
+
+            // Kiểm tra logic từng trường (không hiện UI ở đây, chỉ lấy kết quả true/false)
+            const isUserOk = userVal.length >= 4;
+            const isPassOk = passVal.length >= 6;
+            const isConfirmOk = confirmVal === passVal && confirmVal !== "";
+            const isAddrOk = addrVal.length >= 10 && !isOnlyNumbers;
+
+            // Cập nhật trạng thái nút bấm
+            const canSubmit = isUserOk && isPassOk && isConfirmOk && isAddrOk;
+            registerBtn.disabled = !canSubmit;
+            registerBtn.style.opacity = canSubmit ? "1" : "0.5";
+            registerBtn.style.cursor = canSubmit ? "pointer" : "not-allowed";
+        }
+
+        // Sự kiện cho Username
+        usernameInput.addEventListener('input', function() {
+            const val = this.value.trim();
+            validateField(this, document.getElementById('usernameError'), val.length > 0 && val.length < 4, "Username must be at least 4 characters.");
+            checkAll();
+        });
+
+        // Sự kiện cho Password
+        passwordInput.addEventListener('input', function() {
+            validateField(this, document.getElementById('passwordError'), this.value.length > 0 && this.value.length < 6, "Password must be at least 6 characters.");
+            checkAll();
+        });
+
+        // Sự kiện cho Confirm Password
+        confirmInput.addEventListener('input', function() {
+            validateField(this, document.getElementById('confirmPasswordError'), this.value !== passwordInput.value, "Passwords do not match!");
+            checkAll();
+        });
+
+        // Sự kiện cho Address
+        addressInput.addEventListener('input', function() {
+            const val = this.value.trim();
+            const addrClean = val.replace(/\s/g, '');
+            const isOnlyNumbers = addrClean.length > 0 && /^\d+$/.test(addrClean);
+            
+            validateField(this, document.getElementById('addressError'), val.length > 0 && (val.length < 10 || isOnlyNumbers), 
+                isOnlyNumbers ? "Address cannot be only numbers." : "Address must be at least 10 characters.");
+            checkAll();
+        });
+
+        function showError(input, div, msg) {
+            div.textContent = msg;
+            div.style.display = 'block';
+            input.style.borderColor = '#ff4d4d';
+        }
+
+        function hideError(input, div) {
+            div.style.display = 'none';
+            input.style.borderColor = '';
+        }
+
+        // KHỞI TẠO: Khóa nút ngay từ đầu nhưng không hiện lỗi
+        checkAll(); 
+    });
+    </script>
 </body>
 </html>
