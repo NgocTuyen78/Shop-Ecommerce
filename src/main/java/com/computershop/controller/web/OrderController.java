@@ -52,6 +52,10 @@ public class OrderController {
 
         try {
             List<Order> orders = orderService.getOrdersByUserId(userId);
+
+            // Sort orders by date descending
+            orders.sort((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()));
+
             model.addAttribute("orders", orders);
 
             return "user/orders";

@@ -702,6 +702,16 @@ public String manageProducts(
                 .filter(o -> (status == null || status.isEmpty() || o.getStatus().equalsIgnoreCase(status)))
                 .filter(o -> (customerName == null || customerName.isEmpty() || 
                             (o.getUser() != null && o.getUser().getUsername().toLowerCase().contains(customerName.toLowerCase()))))
+                
+                // Sắp xếp theo ngày đặt hàng mới nhất
+                .sorted((o1, o2) -> {
+                    // Nếu có trường ngày tháng (orderDate), hãy dùng nó để chính xác nhất
+                    if (o1.getOrderDate() != null && o2.getOrderDate() != null) {
+                        return o2.getOrderDate().compareTo(o1.getOrderDate()); // Giảm dần
+                    }
+                    // Nếu không có ngày tháng, dùng OrderId (ID lớn hơn thường là mới hơn)
+                    return o2.getOrderId().compareTo(o1.getOrderId());
+                })
                 .collect(Collectors.toList());
 
             model.addAttribute("orders", filteredOrders); 
