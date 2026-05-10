@@ -10,6 +10,7 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,9 +96,42 @@ public class OrderServiceImpl implements OrderService {
     public void updateOrderStatus(Integer orderId, String status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        order.setStatus(status);
+        
+        // Kiểm tra nếu đơn hàng đang chờ thanh toán (PENDING_PAYMENT)
+        if ("pending_payment".equalsIgnoreCase(order.getStatus())) {
+            // Tính toán xem đã quá 24 giờ kể từ lúc tạo chưa
+            // plusMinutes(1) để test nhanh, sau đó đổi lại thành plusHours(24)
+            if (order.getOrderDate().plusHours(24).isBefore(LocalDateTime.now())) {
+                order.setStatus("cancelled");
+                String expiredNote = "This order was automatically cancelled because it was not paid within 24 hours.";
+                order.setNotes(expiredNote);
+                orderRepository.save(order);
+                return;
+            }
+        }      
+
+        order.setStatus(status.toLowerCase());
         orderRepository.save(order);
     }
+
+    @Override
+    @Scheduled(cron = "0 0 * * * *")
+    //@Scheduled(fixedRate = 60000) // Dùng 1 phút để test nhanh, sau đó đổi lại thành cron để chạy mỗi giờ
+    @Transactional
+        public void autoCancelOrders() {
+            //LocalDateTime limit = LocalDateTime.now().minusMinutes(1); // Dùng 1 phút để test nhanh, sau đó đổi lại thành 24 giờ
+            LocalDateTime limit = LocalDateTime.now().minusHours(24);
+            List<Order> expiredOrders = orderRepository.findByStatusAndOrderDateBefore("pending_payment", limit);
+
+            if (!expiredOrders.isEmpty()) {
+                for (Order order : expiredOrders) {
+                    order.setStatus("cancelled");
+                    order.setNotes("System: Cancelled due to payment timeout (24h).");
+                }
+                orderRepository.saveAll(expiredOrders);
+                System.out.println("Scheduled Task: Cancelled " + expiredOrders.size() + " expired orders.");
+            }
+        }
 
     @Override
     public void deleteOrder(Integer orderId) {

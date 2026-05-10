@@ -204,13 +204,12 @@
         <div th:if="${user != null}">
             <div class="profile-card">
                 <h2><i class="fas fa-edit"></i> Update Information</h2>
-                <form th:action="@{/user/profile/update}" method="post">
+                <form th:action="@{/user/profile/update}" method="post" novalidate id="profileForm">
                     <div class="form-group">
                         <label for="userId">User ID:</label>
                         <input type="text" id="userId" th:value="${user.userId}" disabled>
                         <div class="info-text">ID cannot be changed</div>
                     </div>
-                    <!-- Role (Mới - Không được sửa) -->
                     <div class="form-group">
                         <label for="role">Role:</label>
                         <input type="text" id="role" th:value="${user.role?.roleName}" disabled>
@@ -218,25 +217,27 @@
                     </div>
                     <div class="form-group">
                         <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" 
-                            th:value="${user.username ?: 'N/A'}" required>
-                    </div>
-                    <!-- Số điện thoại (Mới) -->
-                    <div class="form-group">
-                        <label for="phone">Phone Number:</label>
-                        <input type="text" id="phone" name="phone" 
-                            th:value="${user.phone ?: 'N/A'}" placeholder="Chưa cập nhật số điện thoại">
+                        <input type="text" id="username" name="username" th:value="${user.username}" required>
+                        <div id="usernameError" class="error-text" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
                     </div>
 
-                    <!-- Địa chỉ (Mới) -->
+                    <div class="form-group">
+                        <label for="phone">Phone Number:</label>
+                        <input type="text" id="phone" name="phone" th:value="${user.phone}">
+                        <div id="phoneError" class="error-text" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
+                    </div>
+
                     <div class="form-group">
                         <label for="address">Address:</label>
-                        <input type="text" id="address" name="address" 
-                            th:value="${user.address ?: 'N/A'}" placeholder="Chưa cập nhật địa chỉ"> </div>
+                        <input type="text" id="address" name="address" th:value="${user.address}">
+                        <div id="addressError" class="error-text" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
+                    </div>
+
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="saveProfileBtn">
                             <i class="fas fa-save"></i> Save Changes
                         </button>
+        
                         <a href="/user/orders" class="btn btn-secondary">
                             <i class="fas fa-shopping-bag"></i> View Orders
                         </a>
@@ -246,7 +247,7 @@
 
             <div class="profile-card">
                 <h2><i class="fas fa-key"></i> Change Password</h2>
-                <form th:action="@{/user/change-password}" method="post" class="password-section">
+                <form th:action="@{/user/change-password}" method="post" class="password-section" id="passwordForm">
                     <div class="form-group">
                         <label for="currentPassword">Current Password:</label>
                         <input type="password" id="currentPassword" name="currentPassword" required>
@@ -259,9 +260,10 @@
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password:</label>
                         <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+                        <div id="confirmPasswordError" class="error-text" style="color: #ff4d4d; display: none; font-size: 0.85rem; margin-top: 5px;"></div>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="savePasswordBtn">
                             <i class="fas fa-key"></i> Change Password
                         </button>
                     </div>
@@ -272,5 +274,125 @@
 
     <div th:replace="~{footer :: footer}"></div>
     <script th:src="@{/JavaScript/header.js}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const profileForm = document.getElementById('profileForm');
+    const usernameInput = document.getElementById('username');
+    const phoneInput = document.getElementById('phone');
+    const addressInput = document.getElementById('address');
+    const profileSubmitBtn = document.getElementById('saveProfileBtn');
+
+    function validateProfile() {
+        let isUsernameValid = true;
+        let isPhoneValid = true;
+        let isAddressValid = true;
+
+        // 1. Validate Username (>= 4 ký tự)
+        const userValue = usernameInput.value.trim();
+        const userError = document.getElementById('usernameError');
+        if (userValue.length < 4) {
+            showUIError(usernameInput, userError, "Username must be at least 4 characters.");
+            isUsernameValid = false;
+        } else {
+            hideUIError(usernameInput, userError);
+        }
+
+        // 2. Validate Phone (10 số, bắt đầu bằng 0, không chữ)
+        const phoneValue = phoneInput.value.trim();
+        const phoneError = document.getElementById('phoneError');
+        const phoneRegex = /^0\d{9}$/;
+        if (phoneValue !== "" && !phoneRegex.test(phoneValue)) {
+            showUIError(phoneInput, phoneError, "Phone must be 10 digits starting with 0.");
+            isPhoneValid = false;
+        } else {
+            hideUIError(phoneInput, phoneError);
+        }
+
+        // 3. Validate Address (>= 10 ký tự, không toàn số)
+        const addrValue = addressInput.value.trim();
+        const addrError = document.getElementById('addressError');
+        const addrOnlyDigits = addrValue.replace(/\s/g, ''); 
+        const isOnlyNumbers = addrOnlyDigits.length > 0 && /^\d+$/.test(addrOnlyDigits);
+
+        if (addrValue !== "" && (addrValue.length < 10 || isOnlyNumbers)) {
+            const msg = isOnlyNumbers ? "Address cannot be only numbers." : "Address must be at least 10 characters.";
+            showUIError(addressInput, addrError, msg);
+            isAddressValid = false;
+        } else {
+            hideUIError(addressInput, addrError);
+        }
+
+        // KHÓA/MỞ NÚT BẤM (Real-time)
+        const canSubmit = isUsernameValid && isPhoneValid && isAddressValid;
+        profileSubmitBtn.disabled = !canSubmit;
+        profileSubmitBtn.style.opacity = canSubmit ? "1" : "0.5";
+        profileSubmitBtn.style.cursor = canSubmit ? "pointer" : "not-allowed";
+        
+        return canSubmit;
+    }
+
+    // Gán sự kiện input để kiểm tra ngay khi gõ
+    [usernameInput, phoneInput, addressInput].forEach(el => {
+        if(el) el.addEventListener('input', validateProfile);
+    });
+
+    // Chặn submit nếu vẫn còn lỗi
+    if(profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            if (!validateProfile()) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // --- LOGIC MẬT KHẨU ---
+    const newPass = document.getElementById('newPassword');
+    const confirmPass = document.getElementById('confirmPassword');
+    const passSubmitBtn = document.getElementById('savePasswordBtn');
+    const confirmError = document.getElementById('confirmPasswordError');
+
+    function validatePassword() {
+        const p1 = newPass.value;
+        const p2 = confirmPass.value;
+        const isMatch = p1 === p2 && p1 !== "";
+        const isLongEnough = p1.length >= 6;
+
+        if (p2 !== "" && p1 !== p2) {
+            confirmError.textContent = "Passwords do not match!";
+            confirmError.style.display = "block";
+            confirmPass.style.borderColor = "red";
+        } else {
+            confirmError.style.display = "none";
+            confirmPass.style.borderColor = "";
+        }
+
+        const canPass = isMatch && isLongEnough;
+        passSubmitBtn.disabled = !canPass;
+        passSubmitBtn.style.opacity = canPass ? "1" : "0.5";
+    }
+
+    [newPass, confirmPass].forEach(el => {
+        if(el) el.addEventListener('input', validatePassword);
+    });
+
+    // Helper functions
+    function showUIError(input, div, msg) {
+        div.textContent = msg;
+        div.style.display = 'block';
+        input.style.borderColor = 'red';
+    }
+
+    function hideUIError(input, div) {
+        div.style.display = 'none';
+        input.style.borderColor = '';
+    }
+
+    // Chạy kiểm tra lần đầu
+    validateProfile();
+    validatePassword();
+});
+</script>
 </body>
 </html>
+    

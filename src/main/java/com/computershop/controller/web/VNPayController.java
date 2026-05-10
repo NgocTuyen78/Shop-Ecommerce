@@ -82,7 +82,7 @@ public class VNPayController {
         } else {
             // THANH TOÁN THẤT BẠI HOẶC HỦY
             String errorMessage = translateResponseCode(vnp_ResponseCode);
-            redirectAttributes.addFlashAttribute("error", "Thanh toán không thành công: " + errorMessage);
+            redirectAttributes.addFlashAttribute("error", "Thanh toán không thành công: " + errorMessage + " Đơn hàng sẽ bị hủy nếu không thanh toán trong 24 giờ.");
         }
 
         // 6. REDIRECT: Chuyển hướng người dùng về trang chi tiết đơn hàng cụ thể

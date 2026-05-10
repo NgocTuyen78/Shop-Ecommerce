@@ -3,6 +3,7 @@ package com.computershop.main;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Main application entry point for the Computer Shop E-commerce system.
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.ComponentScan;
  * - User: user / user123
  */
 @SpringBootApplication
+@EnableScheduling
 @ComponentScan(basePackages = {
     "com.computershop.main",      // Original package with entities, repositories
     "com.computershop.config",    // Configuration classes

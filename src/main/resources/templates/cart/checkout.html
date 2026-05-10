@@ -86,7 +86,7 @@
 
       <div class="checkout-grid">
         <div class="checkout-form">
-          <form th:action="@{/cart/checkout}" method="post">
+          <form id="checkoutForm" th:action="@{/cart/checkout}" method="post" novalidate>
             <!-- ĐẶT Ở ĐÂY: Lưu trữ danh sách ID sản phẩm đã chọn -->
              <input type="hidden" name="ids" th:value="${selectedIds}" />
             <div class="form-group">
@@ -104,15 +104,18 @@
                      name="shippingAddress"
                      th:value="${defaultAddress}"
                      placeholder="Enter shipping address..."
-                     required />
+                     required 
+                      />
+              <div id="addressError" class="error-message" style="color: red; font-size: 0.8rem; display: none;">
+                  Address must be at least 10 characters and cannot be only numbers.
+              </div>
             </div>
 
             <div class="form-group">
               <label><i class="fas fa-credit-card"></i> Payment Method</label>
               <div class="payment-methods">
                 <label class="payment-option" id="codOption">
-                  <input type="radio" name="paymentMethod" value="COD" id="payCOD" 
-                         checked onchange="togglePaymentInfo()" />
+                  <input type="radio" name="paymentMethod" value="COD" id="payCOD" />
                   <span class="payment-label">
                     <span class="payment-icon">💵</span>
                     <span>
@@ -124,7 +127,7 @@
 
                 <label class="payment-option" id="vnpayOption" >
                   <input type="radio" name="paymentMethod" value="VNPAY" id="payVNPAY" 
-                         onchange="togglePaymentInfo()"/>
+                         />
                   <span class="payment-label">  
                     <span class="payment-icon">💳</span>
                     <span>
@@ -134,16 +137,6 @@
                   </span>
                 </label>
               </div>
-
-              <!-- <div class="vnpay-info-section" id="vnpayInfoSection">
-                <h3>💳 Payment via VNPay (Sandbox)</h3>
-                <div class="payment-amount">
-                  Amount:
-                  <span th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')}">0</span> đ
-                </div>
-                <p>The system will redirect you to the actual VNPay payment gateway.</p>
-                <p><em>(Use NCB bank, enter test code)</em></p>
-              </div> -->
             </div>
 
             <div class="form-group">
@@ -187,43 +180,99 @@
 
     <div th:replace="~{footer :: footer}"></div>
 
-    <script th:src="@{/JavaScript/header.js}"></script>
     <script>
+    // 1. Hàm kiểm tra tính hợp lệ và khóa/mở nút
+      function checkAddressValidity() {
+          const addressInput = document.getElementById('shippingAddress');
+          const submitBtn = document.querySelector('#checkoutForm button[type="submit"]');
+          if (!addressInput || !submitBtn) return false;
+
+          const rawValue = addressInput.value.trim();
+          const valueWithoutSpaces = rawValue.replace(/\s/g, '');
+
+          const isOnlyNumbers = /^\d+$/.test(valueWithoutSpaces);
+          const isValid = rawValue.length >= 10 && !isOnlyNumbers;
+
+          if (!isValid) {
+              submitBtn.disabled = true;
+              submitBtn.style.opacity = '0.5';
+              submitBtn.style.cursor = 'not-allowed';
+          } else {
+              submitBtn.disabled = false;
+              submitBtn.style.opacity = '1';
+              submitBtn.style.cursor = 'pointer';
+          }
+          return isValid;
+      }
+
+      // 2. Hiển thị thông báo lỗi trực quan
+      function validateAddressUI() {
+          const addressInput = document.getElementById('shippingAddress');
+          const errorDiv = document.getElementById('addressError');
+          if (!addressInput || !errorDiv) return;
+
+          const value = addressInput.value.trim();
+
+          if (value.length === 0) {
+              showError(addressInput, errorDiv, "Address cannot be empty.");
+          } else if (value.length < 10) {
+              showError(addressInput, errorDiv, "Address must be at least 10 characters.");
+          } else if (/^\d+$/.test(value)) {
+              showError(addressInput, errorDiv, "Address cannot contain only numbers.");
+          } else {
+              hideError(addressInput, errorDiv);
+          }
+          
+          checkAddressValidity();
+      }
+
+      function showError(input, div, msg) {
+          div.textContent = msg;
+          div.style.display = 'block';
+          input.style.borderColor = 'red';
+      }
+
+      function hideError(input, div) {
+          div.style.display = 'none';
+          input.style.borderColor = '#ccc';
+      }
+
       function useDefaultAddress() {
-        var input = document.getElementById('shippingAddress');
-        var btn = document.getElementById('useDefaultBtn');
-        if (btn) {
-          input.focus();
-          input.select();
-        }
+          const input = document.getElementById('shippingAddress');
+          const defaultText = document.querySelector('.default-address-hint strong');
+          if (input && defaultText) {
+              input.value = defaultText.innerText;
+              input.focus();
+              validateAddressUI(); 
+          }
       }
 
-      function togglePaymentInfo() {
-        var vnpaySection = document.getElementById('vnpayInfoSection');
-        var vnpayRadio = document.getElementById('payVNPAY');
-        if (vnpaySection && vnpayRadio) {
-          vnpaySection.style.display = vnpayRadio.checked ? 'block' : 'none';
-        }
-      }
+      document.addEventListener("DOMContentLoaded", function() {
+          const addressInput = document.getElementById('shippingAddress');
+          const checkoutForm = document.getElementById('checkoutForm');
 
-      // --- ĐOẠN QUAN TRỌNG NHẤT TÔI THÊM VÀO ĐÂY ---
-      document.querySelector('form').addEventListener('submit', function(e) {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        // Kiểm tra xem nút đã bị nhấn chưa
-        if (submitBtn.disabled) {
-          e.preventDefault();
-          return false;
-        }
-        
-        // Disable nút và hiện thông báo đang xử lý
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        
-        return true;
+          if (addressInput) {
+              addressInput.addEventListener('input', validateAddressUI);
+              addressInput.addEventListener('blur', validateAddressUI);
+              // Kiểm tra ngay khi vừa load (vì Thymeleaf có thể đổ sẵn địa chỉ)
+              validateAddressUI();
+          }
+
+          if (checkoutForm) {
+              checkoutForm.addEventListener('submit', function(e) {
+                  // Chặn lần cuối nếu người dùng cố tình dùng Inspect Element để mở nút
+                  if (!checkAddressValidity()) {
+                      e.preventDefault();
+                      return false;
+                  }
+
+                  // Hiệu ứng Loading
+                  const submitBtn = this.querySelector('button[type="submit"]');
+                  submitBtn.disabled = true;
+                  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+              });
+          }
       });
-
-      // Init
-      togglePaymentInfo();
-    </script>
+  </script>
   </body>
 </html>

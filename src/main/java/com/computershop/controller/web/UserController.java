@@ -93,6 +93,7 @@ public class UserController {
                 user.setAddress(formatInput(address));
 
                 userService.updateUser(userId, user);
+                session.setAttribute("username", user.getUsername());
                 redirectAttributes.addFlashAttribute("success", "Profile updated!");
             }
         } catch (Exception e) {

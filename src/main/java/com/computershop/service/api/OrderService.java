@@ -77,6 +77,12 @@ public interface OrderService {
     void updateOrderStatus(Integer orderId, String status);
 
     /**
+     * Automatically cancels orders that have been pending for more than 24 hours.
+     * This method should be scheduled to run periodically (e.g., every hour).
+     */
+    void autoCancelOrders();
+
+    /**
      * Deletes an order by its ID.
      *
      * @param orderId the order ID
