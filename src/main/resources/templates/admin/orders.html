@@ -201,6 +201,17 @@
                   <input type="text" name="customerName" th:value="${param.customerName}" placeholder="Search name..." class="filter-input">
               </div>
 
+              <!-- Lọc theo Khoảng thời gian -->
+              <div class="filter-group">
+                  <label>From Date</label>
+                  <input type="date" name="from" th:value="${from}" class="filter-input">
+              </div>
+
+              <div class="filter-group">
+                  <label>To Date</label>
+                  <input type="date" name="to" th:value="${to}" class="filter-input">
+              </div>
+
               <!-- Lọc theo Trạng thái -->
               <div class="filter-group">
                   <label>Status</label>

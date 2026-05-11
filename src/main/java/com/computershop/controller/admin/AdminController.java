@@ -681,48 +681,58 @@ public String manageProducts(
      * @return orders view
      */
     @GetMapping("/orders")
-    public String manageOrders(
-            @RequestParam(required = false) Integer orderId,
-            @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) String status,
-            HttpSession session, 
-            Model model) {
-        
-        if (!isAdmin(session)) {
-            return "redirect:/login";
-        }
-
-        try {
-            // Lấy tất cả đơn hàng từ database
-            List<Order> orders = orderService.getAllOrders();
-
-            // Thực hiện lọc danh sách dựa trên tham số (nếu có)
-            List<Order> filteredOrders = orders.stream()
-                .filter(o -> (orderId == null || o.getOrderId().equals(orderId)))
-                .filter(o -> (status == null || status.isEmpty() || o.getStatus().equalsIgnoreCase(status)))
-                .filter(o -> (customerName == null || customerName.isEmpty() || 
-                            (o.getUser() != null && o.getUser().getUsername().toLowerCase().contains(customerName.toLowerCase()))))
-                
-                // Sắp xếp theo ngày đặt hàng mới nhất
-                .sorted((o1, o2) -> {
-                    // Nếu có trường ngày tháng (orderDate), hãy dùng nó để chính xác nhất
-                    if (o1.getOrderDate() != null && o2.getOrderDate() != null) {
-                        return o2.getOrderDate().compareTo(o1.getOrderDate()); // Giảm dần
-                    }
-                    // Nếu không có ngày tháng, dùng OrderId (ID lớn hơn thường là mới hơn)
-                    return o2.getOrderId().compareTo(o1.getOrderId());
-                })
-                .collect(Collectors.toList());
-
-            model.addAttribute("orders", filteredOrders); 
-            return "admin/orders";
-
-        } catch (Exception e) {
-            model.addAttribute("error", "Error: " + e.getMessage());
-            model.addAttribute("orders", List.of());
-            return "admin/orders";
-        }
+public String manageOrders(
+        @RequestParam(required = false) Integer orderId,
+        @RequestParam(required = false) String customerName,
+        @RequestParam(required = false) String status,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        HttpSession session, 
+        Model model) {
+    
+    if (!isAdmin(session)) {
+        return "redirect:/login";
     }
+
+    try {
+        // 1. Áp dụng logic mặc định như bên Report: 
+        // Nếu không chọn ngày thì lấy dữ liệu trong vòng 30 ngày gần nhất
+        LocalDate start = (from == null) ? LocalDate.now().minusDays(30) : from;
+        LocalDate end = (to == null) ? LocalDate.now() : to;
+
+        // 2. Lấy danh sách đơn hàng trong khoảng thời gian từ Database (Tối ưu hiệu năng)
+        List<Order> orders = orderService.getOrdersByPeriod(start, end);
+
+        // 3. Kết hợp với các bộ lọc hiện có (ID, CustomerName, Status) bằng Stream API
+        List<Order> filteredOrders = orders.stream()
+            .filter(o -> (orderId == null || o.getOrderId().equals(orderId)))
+            .filter(o -> (status == null || status.isEmpty() || o.getStatus().equalsIgnoreCase(status)))
+            .filter(o -> (customerName == null || customerName.isEmpty() || 
+                        (o.getUser() != null && o.getUser().getUsername().toLowerCase().contains(customerName.toLowerCase()))))
+            .sorted((o1, o2) -> {
+                // Sắp xếp đơn hàng mới nhất lên đầu dựa trên OrderDate
+                if (o1.getOrderDate() != null && o2.getOrderDate() != null) {
+                    return o2.getOrderDate().compareTo(o1.getOrderDate());
+                }
+                return o2.getOrderId().compareTo(o1.getOrderId());
+            })
+            .collect(Collectors.toList());
+
+        // 4. Đưa dữ liệu ra giao diện
+        model.addAttribute("orders", filteredOrders);
+        
+        // Gửi lại giá trị 'from' và 'to' để hiển thị trên 2 ô input date ở HTML
+        model.addAttribute("from", start);
+        model.addAttribute("to", end);
+        
+        return "admin/orders";
+
+    } catch (Exception e) {
+        model.addAttribute("error", "Error: " + e.getMessage());
+        model.addAttribute("orders", List.of());
+        return "admin/orders";
+    }
+}
 
     /**
      * Displays order detail page.
