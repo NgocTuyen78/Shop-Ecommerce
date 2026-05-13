@@ -1,127 +1,40 @@
-# Shop-Ecommerce
+🛍️ Shop-Ecommerce
+Hệ thống website thương mại điện tử bán phụ kiện điện tử được xây dựng bằng Java Spring Boot.
 
-E-commerce website for computer parts built with Spring Boot and Thymeleaf.
+✨ Tính năng nổi bật
+    - Mua sắm: Xem sản phẩm, giỏ hàng, thanh toán trực tuyến qua VNPay.
+    - Quản trị (Admin): Quản lý sản phẩm, danh mục, đơn hàng và thống kê doanh thu.
+    - Bảo mật: Phân quyền người dùng (Admin/User) rõ ràng.
+    - Linh hoạt: Hỗ trợ chạy trên nhiều loại Database (H2, PostgreSQL).
 
-## Requirements
+🌐 Truy cập trực tuyến (Demo)
+Bạn có thể trải nghiệm nhanh hệ thống đã được triển khai tại:
+👉 https://shop-ecommerce-rhry.onrender.com/
 
-- Java 17+
-- Maven (or use the included `./mvnw` wrapper)
+🚀 Hướng dẫn khởi chạy (Local)
+Cách 1: Chạy nhanh (Dùng Database ảo H2 - Không cần cài đặt)
+Mở terminal tại thư mục dự án và chạy lệnh:
 
-## Quick Start (Any OS — Linux, macOS, Windows)
+Windows: .\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--spring.profiles.active=h2"
 
-### Option A: Local Development (No Docker Needed) — Recommended
+macOS / Linux: ./mvnw spring-boot:run "-Dspring-boot.run.arguments=--spring.profiles.active=h2"
 
-```bash
-./mvnw spring-boot:run '-Dspring-boot.run.arguments=--spring.profiles.active=h2'
-```
+Truy cập: http://localhost:2345
 
-Access: **http://localhost:2345**
+Cách 2: Chạy với PostgreSQL (Dùng Docker)
+Bật Database: docker compose -f docker/docker-compose.single.yml up postgres -d
 
-This uses H2 in-memory database — no installation required. Works out of the box on any OS.
+Chạy ứng dụng: .\mvnw.cmd spring-boot:run
 
-### Option B: With SQL Server (Production-like)
+Truy cập: http://localhost:2345
 
-1. Start SQL Server:
-```bash
-docker compose -f docker/docker-compose.single.yml up mssql --detach
-```
+🔑 Tài khoản mặc định
+| Role    | Username    | Password  |
+|---------|-------------|-----------|
+| Admin   | admin       | admin123  |
+| User    | user        | user123   |
 
-2. Wait ~60s for SQL Server to be healthy, then:
-```bash
-./mvnw spring-boot:run
-```
+🛠 Yêu cầu hệ thống
+    - Java 17 trở lên
+    - Docker (nếu chạy theo Cách 2)
 
-> **Docker Desktop users (Windows/macOS):** Docker handles networking automatically. App connects to `localhost:1433`.
->
-> **Linux users:** Docker containers may not be reachable via `localhost`. Use Docker's `host.docker.internal` or run the app inside the Docker network.
-
-Check DB is ready:
-```bash
-docker ps
-# computershop-db   Up ... (healthy)   0.0.0.0:1433->1433/tcp
-```
-
-### Option C: Full Docker (App + DB in containers)
-
-```bash
-docker compose -f docker/docker-compose.single.yml up --build
-```
-
-Access: **http://localhost:2345**
-
-### Option D: Distributed Mode (2 Databases)
-
-```bash
-docker compose -f docker/docker-compose.distributed.yml up --build
-```
-
----
-
-## Project Structure
-
-```
-Shop-Ecommerce/
-├── src/main/java/com/computershop/
-│   ├── config/           # Configuration
-│   ├── controller/       # Controllers
-│   │   ├── web/          # User controllers
-│   │   └── admin/        # Admin controllers
-│   ├── dto/              # Data Transfer Objects
-│   ├── exception/        # Exception handling
-│   ├── main/             # Entities, Repositories
-│   ├── service/          # Business logic
-│   │   ├── interface/
-│   │   └── impl/
-│   └── util/             # Utilities
-├── docker/               # Docker configs
-└── src/main/resources/
-    ├── application.properties        # Default (SQL Server, localhost)
-    ├── application-h2.properties    # H2 in-memory DB (local dev, cross-platform)
-    └── application-distributed.properties
-```
-
----
-
-## Hot Reload
-
-When running with Maven:
-
-- Edit Java files → DevTools auto-restarts (~1-2 seconds)
-- Edit HTML/CSS/JS → refresh browser, no restart needed
-
----
-
-## Default Accounts
-
-| Role    | Username  | Password  |
-|---------|-----------|-----------|
-| Admin   | `admin`   | `admin123`|
-| Customer| `user`    | `user123` |
-| Customer| `customer1`| `123456`|
-| Customer| `customer2`| `123456`|
-
----
-
-## Database Connections
-
-### H2 Console (when using `--spring.profiles.active=h2`)
-
-Browse at: **http://localhost:2345/h2-console**
-
-| Field            | Value                          |
-|------------------|--------------------------------|
-| JDBC URL         | `jdbc:h2:mem:computershop`     |
-| User Name        | `sa`                           |
-| Password         | *(empty)*                      |
-
-### DBeaver / SQL Client (SQL Server)
-
-| Field                    | Value                    |
-|--------------------------|--------------------------|
-| Host                     | `localhost`              |
-| Port                     | `1433`                   |
-| Database                 | `computershop`           |
-| Username                 | `sa`                     |
-| Password                 | `YourStrong@Passw0rd`    |
-| Encrypt                  | `true`                   |
-| Trust Server Certificate | `true`                   |
